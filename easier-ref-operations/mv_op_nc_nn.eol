@@ -2,27 +2,25 @@
 
 //libraries
 
-import "library/artifact.eol";
-import "library/association.eol";
+import "../evl/library/artifact.eol";
+import "../evl/library/association.eol";
 //import "library/class.eol";
-import "library/classifier.eol";
-import "library/component.eol";
-import "library/element.eol";
-import "library/interaction.eol";
-import "library/interactionFragment.eol";
-import "library/interactionOperand.eol";
-import "library/combinedFragment.eol";
-import "library/interface.eol";
-import "library/lifeline.eol";
-import "library/manifestation.eol";
-import "library/message.eol";
-import "library/node.eol";
-import "library/operation.eol";
-import "library/package.eol";
-
-
+import "../evl/library/classifier.eol";
+import "../evl/library/component.eol";
+import "../evl/library/element.eol";
+import "../evl/library/interaction.eol";
+import "../evl/library/interactionFragment.eol";
+import "../evl/library/interactionOperand.eol";
+import "../evl/library/combinedFragment.eol";
+import "../evl/library/interface.eol";
+import "../evl/library/lifeline.eol";
+import "../evl/library/manifestation.eol";
+import "../evl/library/message.eol";
+import "../evl/library/node.eol";
+import "../evl/library/operation.eol";
+import "../evl/library/package.eol";
 //HELPER
-import "library/HELPER.eol";
+import "../evl/library/HELPER.eol";
 
 ("moving -->" + self.getName() + " to --> " + targetComp.getName() + " on -> " + targetNode.getName()).println();
 
