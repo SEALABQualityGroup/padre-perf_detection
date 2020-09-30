@@ -102,7 +102,6 @@ operation Node createNewNode() : Node{
 	var newNode : Node = new Node; //creo il nuovo nodo
 	var packageContainer : Package = self.getNearestPackage();  //recupero il package container
 	packageContainer.addElement(newNode);
-	//newNode.setRandoms();
 	newNode.name = self.getName()+" Splitted";
 	
 	var listOfLinkedNode = self.getDirectlyLinkedNode();
@@ -111,14 +110,11 @@ operation Node createNewNode() : Node{
 	newNode.cloneLink(listOfLinkedNode, packageContainer);
 	newNode.cloneAppliedStereotypesFrom(self);
 	
-//	self.resetUtilization();
-	//newNode.resetUtilization();
-	
 	return newNode;
 }
 
-
-operation Node createNewDevice() : Device {
+//ADDED by ARCELLI
+/*operation Node createNewDevice() : Device {
 	var newNode : Device = new Device; //creo il nuovo nodo
 	var packageContainer : Package = self.getNearestPackage();  //recupero il package container
 	packageContainer.addElement(newNode);
@@ -135,7 +131,7 @@ operation Node createNewDevice() : Device {
 	newNode.resetUtilization();
 	
 	return newNode;
-}
+}*/
 
 
 operation Node setRandoms() {
@@ -180,7 +176,7 @@ operation Node clone(node : Node) : Node{
 		var packageContainer : Package = node.getNearestPackage();
 		
 		self.cloneAppliedStereotypesFrom(node); //clono gli stereotipi del nodo sorgente
-		//self.cloneDeployedArtifactFrom(node, component); //clono gli artefatti del nodo sorgente
+		//self.cloneDeployedArtifactFrom(node); //clono gli artefatti del nodo sorgente
 		self.cloneLink(listOfLinkedNode, packageContainer);		
 }
 

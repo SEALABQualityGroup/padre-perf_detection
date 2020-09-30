@@ -249,7 +249,8 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
  ******************************************************/
  
  
- operation Operation dynamicFixing(artifact : Artifact) {
+ //ADDED By ARCELLI
+/*operation Operation dynamicFixing(artifact : Artifact) {
  
  	var gaAcqSteps = self.getAllOwnMessages(); //all msgs with self as signature
  	var receiveMoses = MessageOccurrenceSpecification.all.select(mos|gaAcqSteps.exists(m|m=mos.message and m.receiveEvent=mos)); //all (receive event) moses with message in msgs
@@ -298,7 +299,7 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
 			}
 		}
  	}
-}
+}*/
  
  
 operation Operation dynamicFixing(component : Component) {

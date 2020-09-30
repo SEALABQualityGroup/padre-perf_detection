@@ -116,9 +116,9 @@ operation UML!Operation F_T_fuzzy() : Real{
 	
 	var throughputs : Sequence(Real);
 	for(uc in useCases){
-		uc.println("UC -> ");
-		uc.getTag("GaScenario", "throughput").println("Throughput -> ");
-		throughputs.add(uc.getTag("GaScenario", "throughput")->first().asReal());
+		if(useCase.hasStereotype('GaScenario') and not uc.getTag("GaScenario", "throughput").isEmpty()){
+			throughputs.add(uc.getTag("GaScenario", "throughput")->first().asReal());
+		}
 	}
 	
 	var upperBound = throughputs.max().println("UB -> ");
@@ -128,7 +128,6 @@ operation UML!Operation F_T_fuzzy() : Real{
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
 		return 0;
 	}	
-	
 	
 	var listOfUseCases : List(UseCase) = self.getUseCases(); 
 	listOfUseCases.println("List of UCs -> ");
