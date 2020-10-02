@@ -390,9 +390,11 @@ operation Operation dynamicFixing(component : Component) {
 			//sposto il MOS_r dell'op e il EOS
 			lifeline.getCoveredBys().add(bes.getStart());
 			lifeline.getCoveredBys().add(bes.getFinish());
+			lifeline.getCoveredBys().add(bes);
 		
 			sourceLifeline.removeInteractionFragment(bes.getStart());
 			sourceLifeline.removeInteractionFragment(bes.getFinish());
+			sourceLifeline.removeInteractionFragment(bes);
 		}
 	}
 	if(debug()){

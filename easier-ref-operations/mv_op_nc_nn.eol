@@ -22,29 +22,40 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-("moving -->" + self.getName() + " to --> " + targetComp.getName() + " on -> " + targetNode.getName()).println();
+
+var selfOperation = Operation.all->selectOne(o | o.getName() == targetOperationName);
+
+var newComponent = new Component;
+newComponent.setName(newComponentName); 
+Component.all->first().getNearestPackage().getPackagedElements().add(newComponent);
+
+var newNode = new Node;
+newNode.setName(newNodeName); 
+Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
+
+("move operation -->" + selfOperation.getName() + " to --> " + newComponent.getName() + " on -> " + newNode.getName()).println();
 
 //static
-var sourceComponent : Component = self.getOwner();
+var sourceComponent : Component = selfOperation.getOwner();
 		
-targetComp.cloneAppliedStereotypesFrom(sourceComponent); //clono gli stessi stereotipi del componente sorgente	
-targetComp.moveInterfacesRealizationFrom(sourceComponent, self);
+newComponent.cloneAppliedStereotypesFrom(sourceComponent); //clono gli stessi stereotipi del componente sorgente	
+newComponent.moveInterfacesRealizationFrom(sourceComponent, selfOperation);
 	
-var listOfUsedProvidedInterfaces : List(Interface) = sourceComponent.getAllUsedIntefacesRequiredsBy(self);
+var listOfUsedProvidedInterfaces : List(Interface) = sourceComponent.getAllUsedIntefacesRequiredsBy(selfOperation);
 	
 //deploy
-targetComp.deployOn(targetNode);
+newComponent.deployOn(newNode);
 
 if(sourceComponent.getNodes().isEmpty()){
 	sourceComponent.getName().println("[ERROR] The Component is not deployed !!!");
 }
 
-targetNode.clone(sourceComponent.getNodes()->first()); //shall resolve the missed stereotypes
+newNode.clone(sourceComponent.getNodes()->first()); //shall resolve the missed stereotypes
 	
-targetComp.moveOperation(self); //sposta l'operazione sul componente appena creato
+newComponent.moveOperation(selfOperation); //sposta l'operazione sul componente appena creato
 	
 //dynamic
-self.dynamicFixing(sourceComponent);
+selfOperation.dynamicFixing(sourceComponent);
 
 "done".println();
 

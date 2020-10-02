@@ -21,23 +21,27 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-("cloning --> " + target.getName()).println();
+var target  = Node.all->selectOne(n | n.getName() == targetNodeName);
 
-//self.clone(target);
-
-"getDirectlyLinkedNode".println();
-var listOfLinkedNode = target.getDirectlyLinkedNode();		
+if(target.isUndefined())
+	throw "[ERROR]: Node" + target.name + "is undefined";
 
 var packageContainer : Package = target.getNearestPackage();
 
-"cloneAppliedStereotypesFrom".println();
-self.cloneAppliedStereotypesFrom(target); //clono gli stereotipi del nodo sorgente
+var newNode = new Node;
+newNode.setName(clonedNodeName);
+Node.all-first().getPackagedElements().add(newNode);
 
-"cloneDeployedArtifactFrom".println();
-self.reuseDeployedArtifactFrom(target); //clono gli artefatti del nodo sorgente
+("clone node --> " + targetNodeName + " with --> " + newNode.getName()).println();
 
-"cloneLink".println();
-self.cloneLink(listOfLinkedNode, packageContainer);
+//self.clone(target);
 
+var listOfLinkedNode = target.getDirectlyLinkedNode();		
+
+newNode.cloneAppliedStereotypesFrom(target); //clono gli stereotipi del nodo sorgente
+
+newNode.reuseDeployedArtifactFrom(target); //clono gli artefatti del nodo sorgente
+
+newNode.cloneLink(listOfLinkedNode, packageContainer);
 
 "done".println();

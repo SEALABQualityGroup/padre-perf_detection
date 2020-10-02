@@ -22,11 +22,14 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-("moving -->" + self.getName() + "--> to " + targetComponent.getName()).println();
+var target = Component.all->selectOne(c | c.getName() == targetComponentName);
+var selfOperation = Operation.all->selectOne(c | c.getName() == targetOperationName);
 
-var sourceComponent : Component = self.getOwner();
-targetComponent.moveOperation(self); //sposta l'operazione sul componente appena creato
-self.dynamicFixing(sourceComponent);
+("move operation-->" + selfOperation.getName() + "--> to " + target.getName()).println();
+
+var sourceComponent : Component = selfOperation.getOwner();
+target.moveOperation(selfOperation); //sposta l'operazione sul componente appena creato
+selfOperation.dynamicFixing(sourceComponent);
 
 "done".println();
 

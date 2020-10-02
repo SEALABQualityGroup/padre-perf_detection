@@ -990,5 +990,19 @@ operation Node getDiskCriticOperation() : Operation{
 	return operations->sortBy(iterator | iterator.getAverageDemand())->last();
 }
 
+operation UML!Node reuseDeployedArtifactFrom(node : UML!Node){
+	
+	var hashCode = getHash(self);
+	var newDeployment;
+	
+	//clone gli artefatti dal nodo splittato al nuovo nodo
+	for(dep in node.getDeployments()){
+	
+		//creates and adds a new deployment to the node, with the artifact name
+		newDeployment = self.createDeployment(dep.getName() + hashCode);
+	
+		newDeployment.getDeployedArtifacts().addAll(dep.getDeployedArtifacts()); //aggiungo al deploy l'artefatto
+	}
+}
 
 

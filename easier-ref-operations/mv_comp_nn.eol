@@ -21,9 +21,18 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-("moving --> " + self.getName() + " to --> " + target.getName() ).println();
-self.deployOn(target);
 
-//target.clone(getNodes()->first());
+var newNode = new Node;
+newNode.setName(newNodeName);
+Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
+var selfComponent = Component.all->selectOne(c | c.getName() == targetComponentName);
+
+("move component --> " + selfComponent.getName() + " to --> " + newNode.getName() ).println();
+
+//clones applied stereotypes and communication paths
+var selfNode = selfComponent.getNodes()->first(); 
+newNode.clone(selfNode); 
+
+selfComponent.redeployOn(newNode, selfNode);
 
 "done".println();

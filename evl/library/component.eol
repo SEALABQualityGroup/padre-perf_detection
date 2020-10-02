@@ -294,9 +294,6 @@ operation Component deployOnNewNode() :Boolean {
 
 operation Component deployOn(node : Node){
 	
-	(node.name).println();
-	(self.name).println();
-	
 	var newArtifact : Artifact = new Artifact;
 	var newManifestation; 
 	var newDeployment; 
@@ -308,6 +305,19 @@ operation Component deployOn(node : Node){
 	newManifestation.getClients().add(newArtifact); 
 	newDeployment = node.createDeployment(newArtifact.name); 
 	newDeployment.getDeployedArtifacts().add(newArtifact);
+}
+
+
+operation UML!Component removeDeploymentOn(node : UML!Node){
+	
+	//sequence of deployments on @param node of @param self
+	var deps = Deployment.all->select(d | d.getClients()
+			->select(c | c == node).notEmpty()).flatten
+				->select(dp | dp.getSuppliers().flatten
+					->select(a | a.getManifestations().flatten
+						->select(m | m.getUtilizedElement() == self).notEmpty()).notEmpty());
+						
+	node.getDeployments().removeAll(deps);
 }
 
 operation Component getNeighbours() : List(Node){
