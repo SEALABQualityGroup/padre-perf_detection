@@ -30,7 +30,7 @@ var packageContainer : Package = target.getNearestPackage();
 
 var newNode = new Node;
 newNode.setName(clonedNodeName);
-Node.all-first().getPackagedElements().add(newNode);
+Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 
 ("clone node --> " + targetNodeName + " with --> " + newNode.getName()).println();
 
