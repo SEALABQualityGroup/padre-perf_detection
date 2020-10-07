@@ -4,16 +4,33 @@
 	In particolare da problemi l'attributo "queueSchedPolicy"
 */
 //clone gli stereotipi
-operation Element cloneAppliedStereotypesFrom(element : Element) {
+operation UML!Element cloneAppliedStereotypesFrom(element : UML!Element) {
 	if(element.isUndefined() or element.getAppliedStereotypes().isUndefined() ){
 		("the element is undefined").println();
 		showError("Method: cloneAppliedStereotypesFrom() in element.eol");
 	}else{
 		for(stereotype in element.getAppliedStereotypes()){
-			if(not self.hasStereotype(stereotype.getName()))
+			if(not self.hasStereotype(stereotype.getName())){
 				self.applyStereotype(stereotype);
-			if(stereotype.name <> "RtUnit" and stereotype.name <> "GaExecHost") 
+				
+				if(stereotype.name = "DaComponent"){
+					
+					var daFailureTag = element.getTag("DaComponent", "failure")->first();
+					var daFailureType = daFailureTag.type;
+					//it invokes the EcoreUtil, shall it work within a standalone java invocation?
+					var emfTool : new Native("org.eclipse.epsilon.emc.emf.tools.EmfTool");
+					//creates a new instance of @param
+					var daFailure = emfTool.getECoreUtil().create(daFailureType);
+					//it is dummy value. it must be set wrt to the component/operation
+					daFailure.occurrenceProb.add("0.56");
+					var failureTag = self.getTag("DaComponent", "failure");
+					failureTag.add(daFailure);
+				}
+			}
+				
+			if(stereotype.name <> "RtUnit" and stereotype.name <> "GaExecHost" and stereotype.name <> "DaComponent"){
 				self.setAttributeValueFrom(stereotype, element);
+			}
 		}
 	}
 }
@@ -21,15 +38,29 @@ operation Element cloneAppliedStereotypesFrom(element : Element) {
 //clone gli attributi interni dello stereotipo
 operation Element setAttributeValueFrom(stereotype : Stereotype, element : Element){
 	var stereotypeAttr = stereotype.getAttributes();
+	
+	
 	for(attr in stereotypeAttr){
 		if(attr.name <> "base_Element" and attr.name <> "base_NamedElement")
 		{ 
-			var attrValue = element.getValue(stereotype, attr.name);
+			var attrValue; //= element.getValue(stereotype, attr.name);
+			
+			if(element.getValue(stereotype, attr.name).isTypeOf(Set))
+				attrValue = element.getValue(stereotype, attr.name).clone();
+			else
+				attrValue = element.getValue(stereotype, attr.name);
+			
+			//attrValue.println("attrValue --> ");
+			//attr.name.println("attr name --> ");
+			
 			if(attrValue.isDefined()){
 				self.setValue(stereotype, attr.name, attrValue);
 			}
 		}
-	}	
+	}
+	
+	//self.getTag("DaComponent", "failure").println("self get tag --> ");
+	//element.getTag("DaComponent", "failure").println("element get tag --> ");
 }
 
 //clone gli attributi interni dello stereotipo

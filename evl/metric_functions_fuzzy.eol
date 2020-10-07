@@ -11,9 +11,9 @@
 
 operation UML!Operation F_probExec_fuzzy() : Real{
 	
-	if(self.isKindOf(UML!Operation)){
-		self.getName().println("operation ");
-	}
+//	if(self.isKindOf(UML!Operation)){
+		//self.getName().println("operation ");
+	//}
 
 	var msgs = Message.all->select(msg | msg.hasStereotype("GaStep"));
 	
@@ -44,6 +44,8 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	
 	var listOfMes = self.getAllOwnMessages();
 	
+	//listOfMes.println("LIST MESS --> ");
+	
 	var fValue : Real = 0.0;
 	
 	//it considers the first operands as the final value
@@ -51,18 +53,24 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	for(m in listOfMes){
 		if( m.hasStereotype("GaStep") ){
 			fValue = m.getTag("GaStep", "prob").asReal();
-			m.getInteraction().getFragments()->first().getTag("GaStep", "prob").asReal();
-			fValue = m.getInteraction().getExecProb() * fValue; 
+			fValue = m.getInteraction().getExecProb() * fValue;
 			break;
 		}
 	}
 	
+	return fValue;
+	
+	/*
+	fValue.println("Mes "+ self.name + " prob exec:");
 	if(fValue == 0){
 		//log("The operation has any set demands. Returns to avoid negative values.");
 		return 0;
 	}
 	
-	return 1-( (upperBound - fValue) / (upperBound - lowerBound));
+	(upperBound - fValue).println("Numerator: ");
+	(upperBound - lowerBound).println("Denominatore: ");
+	
+	return 1-( (upperBound - fValue) / (upperBound - lowerBound)).println("Prob exec: ");*/
 }
 
 operation UML!Operation F_resDemand_fuzzy() : Real{
@@ -116,21 +124,20 @@ operation UML!Operation F_T_fuzzy() : Real{
 	
 	var throughputs : Sequence(Real);
 	for(uc in useCases){
-		if(useCase.hasStereotype('GaScenario') and not uc.getTag("GaScenario", "throughput").isEmpty()){
+		if(uc.hasStereotype('GaScenario') and not uc.getTag("GaScenario", "throughput").isEmpty()){
 			throughputs.add(uc.getTag("GaScenario", "throughput")->first().asReal());
 		}
 	}
 	
-	var upperBound = throughputs.max().println("UB -> ");
-	var lowerBound = throughputs.min().println("LB -> ");
+	var upperBound = throughputs.max();
+	var lowerBound = throughputs.min();
 	
 	if(upperBound == lowerBound){
-		//log("Upper and Lower Bounds have the same value. Returns 1.");
+		//log("Upper and Lower Bounds have the same value. Returns 0.");
 		return 0;
 	}	
 	
 	var listOfUseCases : List(UseCase) = self.getUseCases(); 
-	listOfUseCases.println("List of UCs -> ");
 	if(listOfUseCases.isEmpty()){
 		//log("the operation " + self.getName() +" is not in any use cases. Returns 0.");
 		return 0; 
@@ -291,10 +298,9 @@ operation UML!Component F_resDemand_fuzzy() : Real{
 	return ( 1 - ( (upperBound - fValueUB) / (upperBound - lowerBound)  ) ) * ( ( 1 - ( (fValueLB - lowerBound) / (upperBound - lowerBound)  ) )) ;
 }
 
-operation UML!Component F_probExec_fuzzy() : Boolean {
+operation UML!Component F_probExec_fuzzy() : Real {
 	//list of lifelines
-	var lfs = self.getLifelines();
-	return lfs.isEmpty();
+	return self.getLifelines().size();
 }
 
 operation UML!Component F_maxHwUtil_fuzzy() : Real{
@@ -359,7 +365,7 @@ operation UML!Component F_RT_fuzzy() : Real {
 	}	
 	
 	
-	var listOfUseCases : List(UseCase) = self.getUseCases(); 
+	var listOfUseCases : List(UseCase) = self.getUseCases().asSequence(); 
 	if(listOfUseCases.isEmpty()){
 		return 0; 
 	}

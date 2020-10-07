@@ -22,9 +22,9 @@ import "../evl/library/package.eol";
 import "../evl/library/HELPER.eol";
 
 
-var newNode = new Node;
+var newNode = new UML!Node;
 newNode.setName(newNodeName);
-Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
+UML!Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 var selfComponent = Component.all->selectOne(c | c.getName() == targetComponentName);
 
 ("move component --> " + selfComponent.getName() + " to --> " + newNode.getName() ).println();
