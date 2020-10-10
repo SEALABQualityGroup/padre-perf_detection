@@ -32,7 +32,7 @@ var newNode = new Node;
 newNode.setName(clonedNodeName);
 Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 
-("clone node --> " + targetNodeName + " with --> " + newNode.getName()).println();
+//("clone node --> " + targetNodeName + " with --> " + newNode.getName()).println();
 
 //self.clone(target);
 
@@ -44,4 +44,4 @@ newNode.reuseDeployedArtifactFrom(target); //clono gli artefatti del nodo sorgen
 
 newNode.cloneLink(listOfLinkedNode, packageContainer);
 
-"done".println();
+//"done".println();

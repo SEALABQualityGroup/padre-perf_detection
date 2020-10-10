@@ -27,7 +27,7 @@ newNode.setName(newNodeName);
 UML!Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 var selfComponent = Component.all->selectOne(c | c.getName() == targetComponentName);
 
-("move component --> " + selfComponent.getName() + " to --> " + newNode.getName() ).println();
+//("move component --> " + selfComponent.getName() + " to --> " + newNode.getName() ).println();
 
 //clones applied stereotypes and communication paths
 var selfNode = selfComponent.getNodes()->first(); 
@@ -35,4 +35,4 @@ newNode.clone(selfNode);
 
 selfComponent.redeployOn(newNode, selfNode);
 
-"done".println();
+//"done".println();

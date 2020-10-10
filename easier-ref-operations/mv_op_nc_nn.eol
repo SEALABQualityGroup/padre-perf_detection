@@ -33,7 +33,7 @@ var newNode = new Node;
 newNode.setName(newNodeName); 
 Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 
-("move operation -->" + selfOperation.getName() + " to --> " + newComponent.getName() + " on -> " + newNode.getName()).println();
+//("move operation -->" + selfOperation.getName() + " to --> " + newComponent.getName() + " on -> " + newNode.getName()).println();
 
 //static
 var sourceComponent : Component = selfOperation.getOwner();
@@ -57,5 +57,5 @@ newComponent.moveOperation(selfOperation); //sposta l'operazione sul componente 
 //dynamic
 selfOperation.dynamicFixing(sourceComponent);
 
-"done".println();
+//"done".println();
 
