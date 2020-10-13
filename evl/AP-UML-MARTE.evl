@@ -40,10 +40,11 @@ pre{
 context UML!Operation {
 	critique PaF {
 		check: 
-			self.F_probExec_fuzzy() <> 0 and (self.F_resDemand_fuzzy() *
-				(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() )) < 0.80 //.println("PaF <" + self.name +"> --> ") < 0.80 
+			self.getOwner().isTypeOf(Component) and
+			self.F_probExec_fuzzy() <> 0 and 
+			(self.F_resDemand_fuzzy() *	(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() )) < 0.80 //.println("PaF <" + self.name +"> --> ") < 0.80 
 		message : "PaF <Operation> " + self.name
-		fix {
+		/*fix {
 			title : "Move it to a New Component deployed to a New Node"
 			do {
 				log("--------------");
@@ -96,7 +97,7 @@ context UML!Operation {
 			do{
 				self.decomposition();
 			}
-		}
+		}*/
 	}
 }
 
@@ -121,7 +122,7 @@ context Node {
 		check: 
 			( self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy() ) < 0.80 //.println("CPS <"+self.name+"> --> ") < 0.80
 		message : "CPS <" + self.type.name + "> " + self.name
-		fix {
+		/*fix {
 			title : "Move it to a new Component deployed to a new Node"
 			
 			do {
@@ -145,120 +146,9 @@ context Node {
 			do{
 				self.moveToLessCriticalComponent();
 			}
-		}
+		}*/
 	}
 }
-
-/*
-context Node {
-	critique CPS {
-		check: 
-			not( (self.F_maxQL(th_maxQL()) and self.F_maxCpuUtil(th_maxHwUtil()->second()) and self.F_resDemandCpuGreaterOrEqualThan(th_maxResDemand()->first())) or
-				(self.F_maxQL(th_maxQL()) and self.F_maxDiskUtil(th_maxHwUtil()->fourth()))
-			)
-		message : "CPS <Node> " + self.getName()
-		fix {
-			title : "Move it to a New Component deployed to a New Node"
-			do {
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpNCNN on");
-				log("self --> "+self.getName());
-				self.moveToNewComponentDeployedOnNewNode(); 
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Move it to a New Component deployed to the Less Used neighbour Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpNCLN on");
-				log("self --> "+self.getName());
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Redeploy its Component to the Less Used neighbour Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveCompLN on");
-				log("self --> "+self.getName());
-				self.redeployOnNearLessUsedNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Change its Component to the one with the Lowest Demand"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpLC on");
-				log("self --> "+self.getName());
-				self.moveToLessCriticalComponent();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Deploy its Component to New Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveCompNN on");
-				log("self --> "+self.getName());
-				self.redeployOnNewNode();
-				log("--------------");
-				log("");
-			}
-		}
-	}
-}
-
-/*
-context Node {
-	critique CPS_DISK {
-		check: 
-			not ( self.F_maxQL(th_maxQL()) and self.F_maxDiskUtil(th_maxHwUtil()->fourth()) )
-		message : "CPS_DISK <Node> " + self.getName()
-		fix {
-			title : "Move its critical Operation to a New Component deployed to a New Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move its critical Operation to a New Component deployed to the Less Used Neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Critical Component to the Less Used Neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Critical Component to New Node"
-			do{
-				self.redeployOnNewNode();
-			}
-		}
-		fix{
-			title : "Change its owning Component from "+self.name+" to the one with the lowest demand"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
-	}
-}*/
 
 /*********************************************************************************************
  *																							 *
@@ -274,7 +164,7 @@ context UML!Component {
  			( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() ) < 0.80 //.println("EP <"+self.name+"> --> ") < 0.80
  					and self.F_probExec_fuzzy() <> 0 )
  		message : "EP <" + self.type.name + "> " + self.name
- 		fix {
+ 		/*fix {
 			title : "Move it to a new Component deployed to a new Node"
 			
 			do {
@@ -298,7 +188,7 @@ context UML!Component {
 			do{
 				self.moveToLessCriticalComponent();
 			}
-		}
+		}*/
  	}
 }
 
@@ -316,7 +206,7 @@ context UML!Component {
 				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ) < 0.80 //.println("Blob-container <"+self.name+"> --> ") < 0.80
 			
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
-		fix {
+		/*fix {
 			title : "Move its critical operation to a New Component deployed to a New Node"
 			
 			do {
@@ -381,7 +271,7 @@ context UML!Component {
 				log("--------------");
 				log("");
 			}
-		}
+		}*/
 	}
 }
 
@@ -393,7 +283,7 @@ context Component {
 				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ) < 0.80 //.println("Blob-ctroller <"+self.name+"> --> ") < 0.80
 				
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
-		fix {
+		/*fix {
 			title : "Move its Critical Operation to a New Component deployed to a New Node"
 			
 			do {
@@ -429,7 +319,7 @@ context Component {
 			do{
 				self.reduceNumberOfClientConnects(th_maxClientConnects());
 			}
-		}
+		}*/
 	}
 }
 
@@ -449,12 +339,12 @@ context UML!Component {
  				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy())) < 0.80 //.println("EST <"+self.name+"> --> ") < 0.80
  		
  		message : "EST <" + self.type.name + "> " + self.name
- 		fix {
+ 		/*fix {
 			title : "Apply Session Facade Pattern"
 			do {
 				self.applySessionFacade();
 			}
-		}
+		}*/
  	}
 }
 
