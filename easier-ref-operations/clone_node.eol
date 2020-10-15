@@ -24,7 +24,7 @@ import "../evl/library/HELPER.eol";
 var target  = Node.all->selectOne(n | n.getName() == targetNodeName);
 
 if(target.isUndefined())
-	throw "[ERROR]: Node" + target.name + "is undefined";
+	throw "[ERROR]: Node" + targetNodeName + "is undefined";
 
 var packageContainer : Package = target.getNearestPackage();
 
