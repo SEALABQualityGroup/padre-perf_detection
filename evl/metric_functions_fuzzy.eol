@@ -15,7 +15,7 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 		//self.getName().println("operation ");
 	//}
 
-	var msgs = Message.all->select(msg | msg.hasStereotype("GaStep"));
+	/*var msgs = Message.all->select(msg | msg.hasStereotype("GaStep"));
 	
 	var probs : Sequence(Real);
 	
@@ -30,7 +30,10 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	}
 	
 	var upperBound = probs.max();
-	var lowerBound = probs.min();
+	var lowerBound = probs.min();*/
+	
+	var upperBound = messages_bounds.get(0);
+	var lowerBound = messages_bounds.get(1);
 	
 	if(upperBound == 1 and lowerBound == 1){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -38,7 +41,7 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	}
 	
 	if(upperBound == lowerBound ){
-		//log("Upper and Lower Bounds have the same value. Returns 1.");
+		//log("Upper and Lower Bounds have the same value. Returns 0.");
 		return 0;
 	}
 	
@@ -76,7 +79,7 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 operation UML!Operation F_resDemand_fuzzy() : Real{
 	//info("UML!Operation F_resDemand_fuzzy() : Real");	
 	
-	var msgs = Message.all->select(m | m.hasStereotype("GaStep"));
+	/*var msgs = Message.all->select(m | m.hasStereotype("GaStep"));
 	
 	var execTimes : Sequence(Real);
 	
@@ -86,7 +89,10 @@ operation UML!Operation F_resDemand_fuzzy() : Real{
 	}
 	
 	var upperBound = execTimes.max();
-	var lowerBound = execTimes.min();
+	var lowerBound = execTimes.min();*/
+	
+	var upperBound = exec_times_bounds.get(0);
+	var lowerBound = exec_times_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -120,7 +126,7 @@ operation UML!Operation F_resDemand_fuzzy() : Real{
 operation UML!Operation F_T_fuzzy() : Real{
 	info("Operation F_T_fuzzy() : Real");
 	
-	var useCases = UseCase.all;//->select(uc | uc.hasStereotype("GaScenario"));
+	/*var useCases = UseCase.all;//->select(uc | uc.hasStereotype("GaScenario"));
 	
 	var throughputs : Sequence(Real);
 	for(uc in useCases){
@@ -130,7 +136,10 @@ operation UML!Operation F_T_fuzzy() : Real{
 	}
 	
 	var upperBound = throughputs.max();
-	var lowerBound = throughputs.min();
+	var lowerBound = throughputs.min();*/
+	
+	var upperBound = throughputs_bounds.get(0);
+	var lowerBound = throughputs_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 0.");
@@ -230,18 +239,21 @@ operation UML!Node F_maxQL_fuzzy() : Real {
 operation UML!Node F_maxHwUtil_fuzzy() : Real {
 	if(not self.hasStereotype("GaExecHost") or not self.getTag("GaExecHost", "utilization")->first().isDefined())
 		return 0;
-	
-	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
-		
-	var utils : Sequence(Real);
-	
-	for(n in nodes){
-		//if(n.getTag("GaExecHost", "utilization")->first().isDefined() )
-			utils.add(n.getTag("GaExecHost", "utilization")->first().asReal());
-	}
-	
-	var upperBound = utils.max();
-	var lowerBound = utils.min();
+//	
+//	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
+//		
+//	var utils : Sequence(Real);
+//	
+//	for(n in nodes){
+//		//if(n.getTag("GaExecHost", "utilization")->first().isDefined() )
+//			utils.add(n.getTag("GaExecHost", "utilization")->first().asReal());
+//	}
+//	
+//	var upperBound = utils.max();
+//	var lowerBound = utils.min();
+
+	var upperBound = max_hw_util_bounds.max();
+	var lowerBound = max_hw_util_bounds.min();	
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -536,7 +548,7 @@ operation UML!Component F_numMsgsOut_fuzzy() : Real{
 operation UML!Component F_maxNetUtil_fuzzy() : Real{
 
 
-	var paths = CommunicationPath.all->select(p | p.hasStereotype("GaCommChannel") and p.getTag("GaCommChannel","utilization")->first().isDefined());
+	/*var paths = CommunicationPath.all->select(p | p.hasStereotype("GaCommChannel") and p.getTag("GaCommChannel","utilization")->first().isDefined());
 	
 	if(paths.isEmpty())
 		return 0;
@@ -548,7 +560,13 @@ operation UML!Component F_maxNetUtil_fuzzy() : Real{
 	}
 
 	var upperBound = utils.max();
-	var lowerBound = utils.min();
+	var lowerBound = utils.min();*/
+	
+	if(net_util_bounds.isUndefined())
+		return 0;
+	
+	var upperBound = net_util_bounds.get(0);
+	var lowerBound = net_util_bounds.get(0);
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -586,7 +604,7 @@ operation UML!Component F_maxNetUtil_fuzzy() : Real{
 
 operation UML!Component F_numRemMsgs_fuzzy() : Real{
 	
-	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
+	/*var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
 
 	var cmps = Component.all;
 	
@@ -607,15 +625,19 @@ operation UML!Component F_numRemMsgs_fuzzy() : Real{
 	}
 	
 	var upperBound = remMsgs.max();
-	var lowerBound = remMsgs.min();
+	var lowerBound = remMsgs.min();*/
+	
+	var upperBound = remote_messages_bounds.get(0);
+	var lowerBound = remote_messages_bounds.get(1);
 	
 	if(upperBound == lowerBound){
-		//log("Upper and Lower Bounds have the same value. Returns 1.");
+		//log("Upper and Lower Bounds have the same value. Returns 0.");
 		return 0;
 	}
 	
 	remMsgs.clear();
 	numRemMsg = 0;
+	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
 	for(mes in seqOfMes){
 		var lf = mes.getReceiveLifeline(); //lifeline destinataria
 		var component = lf.getRepresents().getType(); //componente
@@ -641,51 +663,65 @@ operation UML!Component F_numRemMsgs_fuzzy() : Real{
 
 operation UML!Component F_numRemInst_fuzzy() : Real{
 	
-	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
+//	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
 
-	var cmps = Component.all;
+	/*var cmps = Component.all;
 	
 	var remInsts : Sequence(Real);
 	
 	var numRem : Integer = 0;
+	
+	var numRemComps = 0;
 	for(c in cmps){
-		numRem = 0;
-		var lfs = c.getLifelines(); //lifeline destinataria
-		for (lf in lfs){
-			var component = lf.getRepresents().getType(); //componente
-			if(component.isTypeOf(Component) and component.isRemote(self) ){ // i due componenti sono remoti
-				numRem = numRem + 1;
-			}	
+		numRemComps = 0;
+		for(c2 in cmps){	
+			if(not (c2 == c) and c.isRemote(c2)){ // i due componenti sono remoti
+				c.println("component C --> ");
+				c2.println("component C2 --> ");
+				numRemComps = numRemComps + 1;
+			}
 		}
-		remInsts.add(numRem);
+		remInsts.add(numRemComps);
 	}
 	
 	var upperBound = remInsts.max();
-	var lowerBound = remInsts.min();
+	var lowerBound = remInsts.min();*/
+	
+	var upperBound = rem_insts_bounds.max();
+	var lowerBound = rem_insts_bounds.min();
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
 		return 0;
 	}
 	
+	var remInsts : Sequence(Real);
 	remInsts.clear();
-	var numRem = 0;
+//	var numRem = 0;
+//	for(c in cmps){
+//		numRem = 0;
+//		var lfs = c.getLifelines(); //lifeline destinataria
+//		for(ls in lfs){
+//			var component = lf.getRepresents().getType(); //componente
+//			if(component.isTypeOf(Component) and component.isRemote(self) ){ // i due componenti sono remoti
+//				numRem = numRem + 1;
+//			}
+//			remInsts.add(numRem);	
+//		}
+//	}
+	
 	for(c in cmps){
-		numRem = 0;
-		var lfs = c.getLifelines(); //lifeline destinataria
-		for(ls in lfs){
-			var component = lf.getRepresents().getType(); //componente
-			if(component.isTypeOf(Component) and component.isRemote(self) ){ // i due componenti sono remoti
-				numRem = numRem + 1;
-			}
-			remInsts.add(numRem);	
+		numRemComps = 0;	
+		if(not (c == self) and c.isRemote(self)){ // i due componenti sono remoti
+			numRemComps = numRemComps + 1;
 		}
+		remInsts.add(numRemComps);
 	}
 	
-	if(remMsg.isEmpty())
+	if(remInsts.isEmpty())
 		return 0;
 	
-	var fValue : Real = remMsg.random().asReal();
+	var fValue : Real = remInsts.random().asReal();
 	
 	//it avoids negative values	
 	if(fValue == 0.0)
