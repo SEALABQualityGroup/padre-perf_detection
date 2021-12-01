@@ -149,7 +149,7 @@ operation Component getAllArtifacts() : Sequence(Artifact){
 	info("Component getAllArtifacts() : Sequence(Artifact)");
 	info("Number of Artifacts of [" + self.name + "] --> [" + Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self)).size() +"]");
 
-	return Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self));
+	return Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self)).asSequence();
 }
 
 //recupero tutte le properties relative al componente negli interaction
