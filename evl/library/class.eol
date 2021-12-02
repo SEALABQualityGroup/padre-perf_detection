@@ -1,13 +1,13 @@
-operation Class moveInterfacesRealizationFrom(class : Class, op : Operation) {
-	var listOfUsedProvidedInterfaces : List(Interface) = class.getInterfaceRealizations().asSequence();
+operation UML!Class moveInterfacesRealizationFrom(class : UML!Class, op : UML!Operation) {
+	var listOfUsedProvidedInterfaces : List(UML!Interface) = class.getInterfaceRealizations().asSequence();
 	for(intRealization in listOfUsedProvidedInterfaces){
 		self.createInterfaceRealization(intRealization.name, intRealization.getContract());
 	}
 }
 
 //recupero la lista delle interfacce richieste
-operation Class getAllUsedIntefacesRequiredsBy( op : Operation ) : List(Interface){
-	var returnValue : List(Interface) = new List(Interface);
+operation UML!Class getAllUsedIntefacesRequiredsBy( op : UML!Operation ) : List(UML!Interface){
+	var returnValue : List(UML!Interface) = new List(UML!Interface);
 	var listOfUsage = self.getUsageRelations();
 	var listOfRequireds = self.getRequireds();
 	for (reqInterface in listOfRequireds){
@@ -18,12 +18,7 @@ operation Class getAllUsedIntefacesRequiredsBy( op : Operation ) : List(Interfac
 	return returnValue;
 }
 
-/*operation Class getRequireds(){
-	
-	return null;
-}*/
-
-operation Class applySessionFacade() : Boolean{
+operation UML!Class applySessionFacade() : Boolean{
 	
 	var mapIntMes = self.getRemoteMesIntoInteractions(); //mapp di interaction e mes
 	var mapRemCompFacade : Map(Class, List(Class)) = new Map(Class, List(Class));
@@ -140,11 +135,11 @@ operation Class applySessionFacade() : Boolean{
 	return false;
 }
 
-operation Class createNewClass() : Class{
+operation UML!Class createNewClass() : UML!Class{
 	
 	var selfPackage = self.getNearestPackage(); //recupero il package contenitore dell'operazione critica
 	
-	var class : Class = new Class(); //creo il componente splittato
+	var class : UML!Class = new Class(); //creo il componente splittato
 	selfPackage.addElement(class); //aggiungo il componente splittato al package del componente sorgente
 	
 	return class;
