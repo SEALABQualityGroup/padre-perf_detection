@@ -74,7 +74,7 @@ context UML!Operation {
  *					DISK max and min are in fourth and fifth position						 *
  *********************************************************************************************/
  
-context UML!Node {
+context Node {
 	critique CPS {
 		check: 
 			( self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy() ) < prob_PAs
@@ -117,7 +117,7 @@ context UML!Component {
 }
 
 
-context UML!Component {
+context Component {
 	critique Blob_DataController {
 		check:
 			( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 

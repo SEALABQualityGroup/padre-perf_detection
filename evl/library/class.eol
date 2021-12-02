@@ -1,13 +1,13 @@
-operation UML!Class moveInterfacesRealizationFrom(class : UML!Class, op : UML!Operation) {
-	var listOfUsedProvidedInterfaces : List(UML!Interface) = class.getInterfaceRealizations().asSequence();
+operation Class moveInterfacesRealizationFrom(class : Class, op : Operation) {
+	var listOfUsedProvidedInterfaces : List(Interface) = class.getInterfaceRealizations().asSequence();
 	for(intRealization in listOfUsedProvidedInterfaces){
 		self.createInterfaceRealization(intRealization.name, intRealization.getContract());
 	}
 }
 
 //recupero la lista delle interfacce richieste
-operation UML!Class getAllUsedIntefacesRequiredsBy( op : UML!Operation ) : List(UML!Interface){
-	var returnValue : List(UML!Interface) = new List(UML!Interface);
+operation Class getAllUsedIntefacesRequiredsBy( op : Operation ) : List(Interface){
+	var returnValue : List(Interface) = new List(Interface);
 	var listOfUsage = self.getUsageRelations();
 	var listOfRequireds = self.getRequireds();
 	for (reqInterface in listOfRequireds){
@@ -18,7 +18,12 @@ operation UML!Class getAllUsedIntefacesRequiredsBy( op : UML!Operation ) : List(
 	return returnValue;
 }
 
-operation UML!Class applySessionFacade() : Boolean{
+/*operation Class getRequireds(){
+	
+	return null;
+}*/
+
+operation Class applySessionFacade() : Boolean{
 	
 	var mapIntMes = self.getRemoteMesIntoInteractions(); //mapp di interaction e mes
 	var mapRemCompFacade : Map(Class, List(Class)) = new Map(Class, List(Class));
@@ -135,11 +140,11 @@ operation UML!Class applySessionFacade() : Boolean{
 	return false;
 }
 
-operation UML!Class createNewClass() : UML!Class{
+operation Class createNewClass() : Class{
 	
 	var selfPackage = self.getNearestPackage(); //recupero il package contenitore dell'operazione critica
 	
-	var class : UML!Class = new Class(); //creo il componente splittato
+	var class : Class = new Class(); //creo il componente splittato
 	selfPackage.addElement(class); //aggiungo il componente splittato al package del componente sorgente
 	
 	return class;

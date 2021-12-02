@@ -1,5 +1,5 @@
 //verifico se l'artifact rappresenta il componente passato per parametro
-operation UML!Artifact hasRepresentationOf(classifier : UML!Classifier) : Boolean {
+operation Artifact hasRepresentationOf(classifier : Classifier) : Boolean {
 	for(manifestation in self.getManifestations()){
 		if(manifestation.getSuppliers()->exists(sup | sup == classifier)){
 			return true;
@@ -8,48 +8,48 @@ operation UML!Artifact hasRepresentationOf(classifier : UML!Classifier) : Boolea
 	return false;
 }
 
-operation UML!Artifact getDeploymentNode() : UML!Node{
-	return Node.allInstances->selectOne(node : UML!Node | 
-		node.getDeployments()->exists(deploy : UML!Deployment | 
-			deploy.getDeployedArtifacts()->exists(artifact : UML!Artifact | artifact == self)
+operation Artifact getDeploymentNode() : Node{
+	return Node.allInstances->selectOne(node : Node | 
+		node.getDeployments()->exists(deploy : Deployment | 
+			deploy.getDeployedArtifacts()->exists(artifact : Artifact | artifact == self)
 		)
 	);
 }
 
-operation UML!Artifact getDeploymentDevices() : Sequence(UML!Device) {
-	return Device.allInstances->select(dev : UML!Device | 
-		dev.getDeployments()->exists(deploy : UML!Deployment | 
+operation Artifact getDeploymentDevices() : Sequence(Device) {
+	return Device.allInstances->select(dev : Device | 
+		dev.getDeployments()->exists(deploy : Deployment | 
 			deploy.getDeployedArtifacts()->contains(self)
 		)
 	);
 }
 
-operation UML!Artifact getManifestedComponents() : Sequence(UML!Component){
+operation Artifact getManifestedComponents() : Sequence(Component){
 	var manifestations = self.getManifestations();
-	var returnValue : Sequence(UML!Component);
+	var returnValue : Sequence(Component);
 	for(man in manifestations){
-		if( man.getUtilizedElement().isTypeOf(UML!Component) ){
+		if( man.getUtilizedElement().isTypeOf(Component) ){
 			returnValue.add(man.getUtilizedElement());
 		}
 	}
 	return returnValue;
-	//self.getManifestations()->select(c : Component | this.getUtilizedElement().isTypeOf(UML!Classifier) ).println();
+	//self.getManifestations()->select(c : Component | this.getUtilizedElement().isTypeOf(Component) ).println();
 }
 
 
-operation UML!Artifact getManifestedClassifier() : Sequence(UML!Classifier){
-	return self.getManifestations()->select(man : UML!Manifestation | man.getUtilizedElement().isTypeOf(UML!Classifier) );
+operation Artifact getManifestedClassifier() : Sequence(Classifier){
+	return self.getManifestations()->select(man : Manifestation | man.getUtilizedElement().isTypeOf(Classifier) );
 }
 
-operation UML!Artifact getDeploymentDevice() : UML!Device {
-	return Device.allInstances->selectOne(dev : UML!Device | 
-		dev.getDeployments()->exists(deploy : UML!Deployment | 
+operation Artifact getDeploymentDevice() : Device {
+	return Device.allInstances->selectOne(dev : Device | 
+		dev.getDeployments()->exists(deploy : Deployment | 
 			deploy.getDeployedArtifacts()->contains(self)
 		)
 	);
 }
 
-operation UML!Artifact getCriticalDeploymentDevice() : UML!Device {
+operation Artifact getCriticalDeploymentDevice() : Device {
 	var deplDevs = self.getDeploymentDevices();
 	//return Device.allInstances->selectOne(dev : Device | 
 	//	dev.getDeployments()->exists(deploy : Deployment | 
@@ -63,7 +63,7 @@ operation UML!Artifact getCriticalDeploymentDevice() : UML!Device {
 
 
 
-operation UML!Artifact getCriticalOperation() : UML!Operation {
+operation Artifact getCriticalOperation() : Operation {
 	var manComps = self.getManifestedComponents();
 	var allOps = manComps.collect(c|c.getOperations()).flatten().asSequence();
 	return getOpWithMaxMeanDemand(allOps);
@@ -74,9 +74,9 @@ operation UML!Artifact getCriticalOperation() : UML!Operation {
 
 
 //OK
-operation UML!Artifact getLifelines() : List(UML!Lifeline){
+operation Artifact getLifelines() : List(Lifeline){
 	//self.name.println("ARTIFACT: ");
-	var returnValue : List(UML!Lifeline) = new List (UML!Lifeline);
+	var returnValue : List(Lifeline) = new List (Lifeline);
 	for(lifeline in Lifeline.allInstances){
 		if(lifeline.getInteraction().isDefined())
 			if(lifeline.getRepresents().isDefined()) 
@@ -92,7 +92,7 @@ operation UML!Artifact getLifelines() : List(UML!Lifeline){
 }
 
 /*
-operation UML!Artifact getCriticalLifeline4BlobContainerAP(th_numReceivedMsgs : List(Real)) : Map{
+operation Artifact getCriticalLifeline4BlobContainerAP(th_numReceivedMsgs : List(Real)) : Map{
 	var returnValue : Map(Interaction, Lifeline) = new Map();
 	var lifelines = self.getLifelines();//.println("LIFELINES: "); //OK
 	
@@ -125,7 +125,41 @@ operation UML!Artifact getCriticalLifeline4BlobContainerAP(th_numReceivedMsgs : 
 	return returnValue;
 }*/
 
-operation UML!Artifact getTotalDemand() : Real {
+// OK BUT TO REVISE
+operation Artifact getCriticalLifeline4BlobControllerAP(th_numSentMsgs : List(Real)) : Map{
+	var returnValue : Map(Interaction, Lifeline) = new Map();
+	var lifelines = self.getLifelines(); //OK
+	
+	for(lf in lifelines){
+		var mapOfInteracationAndOutgoingMsgs = lf.getOutgoingMessages(); //OK - returns a Map(interaction, seq of Mes)
+		var outgoingMsgsProbability = 0.0;
+		//if(debug()){
+			info("number of outgoing messages of ["+lf.represents.type.name+"] in ["+lf.getInteraction().getName()+"] --> "+lf.getOutgoingMessages().size());
+		//}
+		
+		for(int in mapOfInteracationAndOutgoingMsgs.keySet()){
+			for(mes in mapOfInteracationAndOutgoingMsgs.get(int)){
+				outgoingMsgsProbability = outgoingMsgsProbability.asReal() + mes.getMsgProb();//mes.getReceiveEvent().getProbabilityOf();
+			}
+			switch (int.getName()) {
+				case "Access greenhouse" : 
+					if(outgoingMsgsProbability >= th_numSentMsgs->first())
+						returnValue.put(int,lf);
+				case "Change settings sequence" : 
+					if(outgoingMsgsProbability >= th_numSentMsgs->second())
+						returnValue.put(int,lf);
+				default : showError("Method: getCriticalLifeline4BlobContainerAP in component.eol"); 
+			}
+		}
+		info("outgoingMsgsProbability of ["+lf.represents.type.name+"] in ["+lf.getInteraction().getName()+"] --> "+outgoingMsgsProbability);
+	}
+	
+	return returnValue;
+}
+
+
+
+operation Artifact getTotalDemand() : Real {
 	//ASSUMPTION: Demand di una Interaction = SUM(Demand di ogni Message, Demand di ogni referred Interaction)
 	var totDemand : Real = 0.0;
 	var comps = self.getManifestedComponents();
@@ -155,7 +189,7 @@ operation UML!Artifact getTotalDemand() : Real {
 
 
 
-operation UML!Artifact deployTo(d : UML!Device) {
+operation Artifact deployTo(d : Device) {
 	var newDepl : Deployment = new Deployment;
 	newDepl.name = self.name;
 	d.deployments.add(newDepl);
