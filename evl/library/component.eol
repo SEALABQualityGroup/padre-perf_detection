@@ -1,29 +1,29 @@
-operation UML!Component cloneOwnedOperationFrom(componentSource : Component){
+operation Component cloneOwnedOperationFrom(componentSource : Component){
 	for(op in componentSource.ownedOperation){
 		op.cloneOperationInto(self);
 	}
 }
 
-operation UML!Component moveOperation( op : Operation ) : Boolean{
+operation Component moveOperation( op : Operation ) : Boolean{
 	if(self.ownedOperation.add(op)){
 		return true;
 	}
 	return false;
 }
 
-operation UML!Component cloneInterfaceRealizationFrom(component : Component) {
+operation Component cloneInterfaceRealizationFrom(component : Component) {
 	for(realization in component.interfaceRealization){
 		self.interfaceRealization.add(realization.cloneInterfaceRealization());
 	}
 }
 
-operation UML!Component cloneProvidedsFrom(component : Component){
+operation Component cloneProvidedsFrom(component : Component){
 	for(providedInterface in component.getProvideds()){
 		self.getProvideds().add(providedInterface);
 	}
 }
 
-operation UML!Component cloneRequiredsFrom(component : UML!Component ){
+operation Component cloneRequiredsFrom(component : Component ){
 	for(requiredInterface in component.getRequireds()){
 		self.getRequireds().add(requiredInterface);
 	}
@@ -48,7 +48,7 @@ operation UML!Component getLifelines() : List(Lifeline){
 
 
 //recupero le lifeline del component
-/*operation UML!Component getLifelines() : List(Lifeline){
+/*operation Component getLifelines() : List(Lifeline){
 	var returnValue : List(Lifeline) = new List (Lifeline);
 	for(lifeline in Lifeline.allInstances){
 		if(lifeline.getInteraction().isDefined() and lifeline.getRepresents().getType() == self){
@@ -59,7 +59,7 @@ operation UML!Component getLifelines() : List(Lifeline){
 }*/
 
 /*
-operation UML!Component getLifeline(interaction : Interaction) : Lifeline{
+operation Component getLifeline(interaction : Interaction) : Lifeline{
 	for(lf in Lifeline.allInstances){
 		if(lf.getOwner() == interaction){ 
 			if(lf.getRepresents().getType() == self){
@@ -71,21 +71,21 @@ operation UML!Component getLifeline(interaction : Interaction) : Lifeline{
 }*/
 
 
-operation UML!Component getLifeline(interaction : Interaction) : Lifeline{
+operation Component getLifeline(interaction : Interaction) : Lifeline{
 	return self.getLifelines().select(l|l.getOwner() == interaction).first();
 }
 
-operation UML!Component getLifelines(interaction : Interaction) : Sequence(Lifeline) {
+operation Component getLifelines(interaction : Interaction) : Sequence(Lifeline) {
 	return self.getLifelines().select(l|l.getOwner() == interaction);
 }
 
 
-operation UML!Component moveInterfaceRealizations(interfaceRealization : InterfaceRealization){
+operation Component moveInterfaceRealizations(interfaceRealization : InterfaceRealization){
 	self.interfaceRealization.add(interfaceRealization);
 }
 
 
-operation UML!Component getAllUsedIntefacesProvidedsBy (op : Operation) : List(Interface){
+operation Component getAllUsedIntefacesProvidedsBy (op : Operation) : List(Interface){
 	var returnValue : List(Interface) = new List(Interface);
 	
 	//var listOfUsage = op.getNearestPackage().getUsageRelations();
@@ -118,7 +118,7 @@ operation UML!Component getAllUsedIntefacesProvidedsBy (op : Operation) : List(I
 }
 
 //recupero la lista delle interfacce richieste
-operation UML!Component getAllUsedIntefacesRequiredsBy ( op : Operation ) : List(Interface){
+operation Component getAllUsedIntefacesRequiredsBy ( op : Operation ) : List(Interface){
 	var returnValue : List(Interface) = new List(Interface);
 	var listOfUsage = self.getUsageRelations();
 	var listOfRequireds = self.getRequireds();
@@ -131,7 +131,7 @@ operation UML!Component getAllUsedIntefacesRequiredsBy ( op : Operation ) : List
 }
 
 //recupero la lista di usage proprie del componente
-operation UML!Component getUsageRelations() : List(Usage){
+operation Component getUsageRelations() : List(Usage){
 	var returnValue : List(Usage) = new List(Usage);
 	
 	for(relation in Usage.allInstances){
@@ -145,7 +145,7 @@ operation UML!Component getUsageRelations() : List(Usage){
 /*
  * Retrive artifacts that manifests the self component
  */
-operation UML!Component getAllArtifacts() : Sequence(Artifact){
+operation Component getAllArtifacts() : Sequence(Artifact){
 	info("Component getAllArtifacts() : Sequence(Artifact)");
 	info("Number of Artifacts of [" + self.name + "] --> [" + Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self)).size() +"]");
 
@@ -153,7 +153,7 @@ operation UML!Component getAllArtifacts() : Sequence(Artifact){
 }
 
 //recupero tutte le properties relative al componente negli interaction
-operation UML!Component getAllInteractionProperties() : List(Property){
+operation Component getAllInteractionProperties() : List(Property){
 	var returnValue : List(Lifeline) = new List(Lifelinei);
 	
 	for(interaction in Interaction.allInstances){
@@ -167,7 +167,7 @@ operation UML!Component getAllInteractionProperties() : List(Property){
 	return returnValue;
 }
 
-operation UML!Component getManifestations() : List(Manifestation){
+operation Component getManifestations() : List(Manifestation){
 	var returnValue : List(Manifestation) = new List(Manifestation);
 	for(manifestation in Manifestation.allInstances){
 		if(manifestation.getUtilizedElement == self){
@@ -179,7 +179,7 @@ operation UML!Component getManifestations() : List(Manifestation){
 
 
 
-operation UML!Component getNodes() : List(Node){
+operation Component getNodes() : List(Node){
 	info("Component getNodes() : List(Node)");
 	var returnValue : List(Node) = new List(Node);
 	for (artifact in self.getAllArtifacts()){
@@ -192,7 +192,7 @@ operation UML!Component getNodes() : List(Node){
 	return returnValue;
 }
 
-operation UML!Component getDevices() : List(Device){
+operation Component getDevices() : List(Device){
 	var returnValue : List(Device) = new List(Device);
 	for (artifact in Artifact.allInstances.select(a|a.hasRepresentationOf(self))){
 		returnValue.addAll(artifact.getDeploymentDevices());
@@ -205,7 +205,7 @@ operation UML!Component getDevices() : List(Device){
 	return returnValue;
 }
 
-operation UML!Component moveInterfacesRealizationFrom(component : UML!Component, op : UML!Operation) {
+operation Component moveInterfacesRealizationFrom(component : Component, op : Operation) {
 	
 	var listOfUsedProvidedInterfaces = component.getAllUsedIntefacesProvidedsBy(op);
 	
@@ -227,12 +227,12 @@ operation UML!Component moveInterfacesRealizationFrom(component : UML!Component,
 	}
 }
 
-operation UML!Component getOperations() : Sequence(Operation){
+operation Component getOperations() : Sequence(Operation){
 	return self.getOwnedOperations().asSequence();
 }
 
 
-operation UML!Component deployOnNewNodes(component : Component) {
+operation Component deployOnNewNodes(component : Component) {
 	
 	var listOfNode : List(Node) = component.getNodes();
 	var newNode;
@@ -251,7 +251,7 @@ operation UML!Component deployOnNewNodes(component : Component) {
 	self.deployOn(newNode);
 }
 
-operation UML!Component getNearLessUsedNodes() : List(Node){
+operation Component getNearLessUsedNodes() : List(Node){
 	
 	var listOfNode = self.getNodes();
 	var listOfNearLessUsed : List(Node) = new List(Node);
@@ -276,7 +276,7 @@ operation UML!Component getNearLessUsedNodes() : List(Node){
 	return listOfNearLessUsed;
 }
 
-operation UML!Component deployOnNewNode() :Boolean {
+operation Component deployOnNewNode() :Boolean {
 	
 	var listOfSelfNodes : List(Node) = self.getNodes();
 	
@@ -292,7 +292,7 @@ operation UML!Component deployOnNewNode() :Boolean {
 	return true;	
 }
 
-operation UML!Component deployOn(node : Node){
+operation Component deployOn(node : Node){
 	
 	var newArtifact : Artifact = new Artifact;
 	var newManifestation; 
@@ -320,7 +320,7 @@ operation UML!Component removeDeploymentOn(node : UML!Node){
 	node.getDeployments().removeAll(deps);
 }
 
-operation UML!Component getNeighbours() : List(Node){
+operation Component getNeighbours() : List(Node){
 	var listOfNode : List(Node) = new List(Node);
 	
 	for(node in self.getNodes()){
@@ -332,13 +332,13 @@ operation UML!Component getNeighbours() : List(Node){
 	return listOfNode;
 }
 
-operation UML!Component redeployOn(node : Node, from : Node){
+operation Component redeployOn(node : Node, from : Node){
 	var artifact = self.getArtifactOn(from);
 	var deployment = self.getDeploymentOn(from, artifact);
 	node.getDeployments().add(deployment);
 }
 
-operation UML!Component getArtifactOn(node : Node) : Artifact{
+operation Component getArtifactOn(node : Node) : Artifact{
 	var deploymentNode: Node; 
 	
 	for (art in self.getAllArtifacts()){
@@ -350,7 +350,7 @@ operation UML!Component getArtifactOn(node : Node) : Artifact{
 	return null;
 }
 
-operation UML!Component calculateUtilization() : Sequence(Real){
+operation Component calculateUtilization() : Sequence(Real){
 	var ownOperations = self.getOperations()->select(iterator | iterator.hasStereotype("GaStep"));
 	var utilization : Sequence(Real) = new Sequence(Real);
 	var servCountSize : Integer = ownOperations->first().getValue(ownOperations->first().getStereotype("GaStep"), "servCount").size();
@@ -374,7 +374,7 @@ operation UML!Component calculateUtilization() : Sequence(Real){
 	return (utilization / servCountSize);
 }
 
-operation UML!Component calculateTotalUtilization() : Real{
+operation Component calculateTotalUtilization() : Real{
 	var totUtilization : Real = 0.0;
 	var utilizations = self.calculateUtilization();
 	for (utl in utilizations){
@@ -383,7 +383,7 @@ operation UML!Component calculateTotalUtilization() : Real{
 	return totUtilization;
 }
 
-operation UML!Component addUsages(usages : Sequence(Usage)){
+operation Component addUsages(usages : Sequence(Usage)){
 	for(usage in usages){
 		if(usage.isTypeOf(InterfaceRealization)){
 			self.moveInterfaceRealizations(usage);
@@ -392,7 +392,7 @@ operation UML!Component addUsages(usages : Sequence(Usage)){
 	}
 }
 
-operation UML!Component getDeploymentOn(node : Node, art : Artifact) : Deployment{
+operation Component getDeploymentOn(node : Node, art : Artifact) : Deployment{
 	var returnValue = Deployment.allInstances->selectOne(
 		deployment : Deployment | deployment.client->exists(targetNode : Node | targetNode == node) and deployment.supplier->exists(
 			deployedArtifact : Artifact | deployedArtifact == art
@@ -401,7 +401,7 @@ operation UML!Component getDeploymentOn(node : Node, art : Artifact) : Deploymen
 	return returnValue;
 }
 
-operation UML!Component createLifelineInto(interaction : Interaction) : Lifeline {
+operation Component createLifelineInto(interaction : Interaction) : Lifeline {
 	var lifeline = interaction.createLifeline(self.name+"lifeline"); //L2
 	var spProp = interaction.createOwnedAttribute(self.name, self);
 	
@@ -409,7 +409,7 @@ operation UML!Component createLifelineInto(interaction : Interaction) : Lifeline
 	return lifeline;
 }
 
-operation UML!Component getCriticalOperation() : Operation{
+operation Component getCriticalOperation() : Operation{
 
 	var operations = self.getOwnedOperations()->select(iterator | iterator.hasStereotype("GaStep"));
 	var criticalOperation : Operation;
@@ -433,7 +433,7 @@ operation UML!Component getCriticalOperation() : Operation{
 	return criticalOperation;
 }
 
-operation UML!Component getSendingMessages() : Integer{
+operation Component getSendingMessages() : Integer{
 	var lifelines = self.getLifelines();
 	
 	for(lf in lifelines){
@@ -459,7 +459,7 @@ operation UML!Component getCriticalLifeline4BlobContainerAP(th_numReceivedMsgs :
 }
 
 // OK BUT TO REVISE
-operation UML!Component getCriticalLifeline4BlobControllerAP(th_numSentMsgs : List(Real)) : Map{
+operation Component getCriticalLifeline4BlobControllerAP(th_numSentMsgs : List(Real)) : Map{
 	var returnValue : Map(Interaction, Lifeline) = new Map();
 	var lifelines = self.getLifelines(); //OK
 	
@@ -502,7 +502,7 @@ operation UML!Component getCriticalLifeline4BlobControllerAP(th_numSentMsgs : Li
 	return returnValue;
 }
 
-/*operation UML!Component getCriticalLifeline4BlobControllerAP(th_numSentMsgs : Real) : Sequence(Lifeline){
+/*operation Component getCriticalLifeline4BlobControllerAP(th_numSentMsgs : Real) : Sequence(Lifeline){
 	var returnValue : Sequence(Lifeline) = new Sequence(Lifeline);
 	var lifelines = self.getLifelines();
 	
@@ -539,11 +539,11 @@ operation UML!Component getNodesWithUtilizationGreaterThan(th_maxHwUtil : Real) 
 	return self.getNodes()->select(n : Node | n.getUtilization() >= th_maxHwUtil);
 }
 
-operation UML!Component getDevicesWithMaxUtilizationGreaterThan(th_maxHwUtil : Real) : Sequence(Node){
+operation Component getDevicesWithMaxUtilizationGreaterThan(th_maxHwUtil : Real) : Sequence(Node){
 	return self.getDevices().println("DEVICES OF COMPONENT " + self.getName() + ": ")->select(n : Device | n.getMaxUtilization() >= th_maxHwUtil).println("DEVICES WITH HIGH UTIL: ");
 }
 
-operation UML!Component getNodesWithNetworkUsageGreaterThan(th_maxNetUtil : Real) : Sequence(Node){
+operation Component getNodesWithNetworkUsageGreaterThan(th_maxNetUtil : Real) : Sequence(Node){
 	var returnValue : Sequence(Node) = new Sequence(Node);
 	
 	for (node in self.getNodes()){
@@ -556,7 +556,7 @@ operation UML!Component getNodesWithNetworkUsageGreaterThan(th_maxNetUtil : Real
 	return returnValue;
 }
 
-operation UML!Component getNodesWithNetworkUsageLesserThan(th_minNetUtil : Real) : Sequence(Node){
+operation Component getNodesWithNetworkUsageLesserThan(th_minNetUtil : Real) : Sequence(Node){
 	var returnValue : Sequence(Node) = new Sequence(Node);
 	
 	for (node in self.getNodes()){
@@ -573,7 +573,7 @@ operation UML!Component getNodesWithNetworkUsageLesserThan(th_minNetUtil : Real)
 	return returnValue;
 }
 
-operation UML!Component getOperationsWithResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
+operation Component getOperationsWithResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
 	var listOfOperations = self.getOperations();
 	var returnValue : List(Operation) = new List(Operation);
 	for(op in listOfOperations){
@@ -586,7 +586,7 @@ operation UML!Component getOperationsWithResDemandGreaterOrEqual(th_maxResDemand
 	return returnValue;
 }
 
-operation UML!Component getOperationsWithCpuResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
+operation Component getOperationsWithCpuResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
 	var listOfOperations = self.getOperations();
 	var returnValue : List(Operation) = new List(Operation);
 	for(op in listOfOperations){
@@ -607,7 +607,7 @@ operation UML!Component getOperationsWithCpuResDemandGreaterOrEqual(th_maxResDem
 	return returnValue->sortBy(iterator | iterator.getAverageDemand());
 }
 
-operation UML!Component getOperationsWithDiskResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
+operation Component getOperationsWithDiskResDemandGreaterOrEqual(th_maxResDemand : List(Real) ) : List(Operation){
 	var listOfOperations = self.getOperations();
 	var returnValue : List(Operation) = new List(Operation);
 	for(op in listOfOperations){
@@ -625,7 +625,7 @@ operation UML!Component getOperationsWithDiskResDemandGreaterOrEqual(th_maxResDe
 	return returnValue->sortBy(iterator | iterator.getAverageDemand());
 }
 
-operation UML!Component getOperationsWithResDemandLessThan(th_minResDemand : List(Real) ) : List(Operation){
+operation Component getOperationsWithResDemandLessThan(th_minResDemand : List(Real) ) : List(Operation){
 	info("getOperationsWithResDemandLessThan(th_minResDemand : List(Real) ) : List(Operation)");
 	var listOfOperations = self.getOperations();
 	info("listOfOperations --> " + listOfOperations.asString());
@@ -641,11 +641,11 @@ operation UML!Component getOperationsWithResDemandLessThan(th_minResDemand : Lis
 }
 
 
-operation UML!Component getRequiredInterfaces() : Sequence(Interface){
+operation Component getRequiredInterfaces() : Sequence(Interface){
 	return self.getRequireds().asSequence();
 }
 
-operation UML!Component getInteractions() : Sequence(Interaction){
+operation Component getInteractions() : Sequence(Interaction){
 	var returnValue : Sequence(Interaction) = new Sequence(Interaction);
 	for(lf in self.getLifelines()){
 		returnValue.add(lf.getInteraction());
@@ -653,7 +653,7 @@ operation UML!Component getInteractions() : Sequence(Interaction){
 	return returnValue;
 }
 
-operation UML!Component isRemote(component : Component) : Boolean{
+operation Component isRemote(component : Component) : Boolean{
 	for (node in self.getNodes()){
 		for(n in component.getNodes()){
 			if(node.hasNetworklinkWith(n)){
@@ -667,7 +667,7 @@ operation UML!Component isRemote(component : Component) : Boolean{
 	return false;
 }
 
-operation UML!Component countRemoteMessages(th_maxRemMsgs : Real) : Boolean{
+operation Component countRemoteMessages(th_maxRemMsgs : Real) : Boolean{
 	var map = self.getRemoteMesIntoInteractions();
 	
 	if(map.isUndefined()){
@@ -694,7 +694,7 @@ operation UML!Component countRemoteMessages(th_maxRemMsgs : Real) : Boolean{
 	return false;
 }
 
-operation UML!Component getRemoteMesIntoInteractions() : Map{	
+operation Component getRemoteMesIntoInteractions() : Map{	
 	var returnMap : Map(Interaction, Sequence(Map)) = new Map(Interaction, Sequence(Map));
 	
 	var seqMaps : Sequence(Map) = new Sequence(Map);
@@ -748,7 +748,7 @@ operation UML!Component getRemoteMesIntoInteractions() : Map{
 	return returnMap;
 }
 
-operation UML!Component countRemoteInstances(th_maxRemInst : Integer) : Boolean{
+operation Component countRemoteInstances(th_maxRemInst : Integer) : Boolean{
 	var map = self.getRemoteMesIntoInteractions();
 	var seqLf : Sequence(Lifeline) = new Sequence(Lifeline);
 	
@@ -789,7 +789,7 @@ operation UML!Component countRemoteInstances(th_maxRemInst : Integer) : Boolean{
 }
 
 
-operation UML!Component applySessionFacade_StaticView(remoteComp : Component, seqOfMes : Sequence(Message) ) : Sequence(Component) {
+operation Component applySessionFacade_StaticView(remoteComp : Component, seqOfMes : Sequence(Message) ) : Sequence(Component) {
 	
 	var twoFacades : Sequence(Component) = new Sequence;
 	
@@ -836,7 +836,7 @@ operation UML!Component applySessionFacade_StaticView(remoteComp : Component, se
 	
 }
 
-operation UML!Component applySessionFacade_DeploymentView(comp : Component, localFacade : Component, remoteFacade : Component) {
+operation Component applySessionFacade_DeploymentView(comp : Component, localFacade : Component, remoteFacade : Component) {
 
 	for(node in self.getNodes()){
 		localFacade.deployOn(node);
@@ -846,7 +846,7 @@ operation UML!Component applySessionFacade_DeploymentView(comp : Component, loca
 	} 
 }
 
-operation UML!Component applySessionFacade_DynamicView(remoteComp : Component, localFacade : Component, remoteFacade : Component, seqOfMes : Sequence(Message), opFacade : Operation) {
+operation Component applySessionFacade_DynamicView(remoteComp : Component, localFacade : Component, remoteFacade : Component, seqOfMes : Sequence(Message), opFacade : Operation) {
 	var interaction = seqOfMes->first().getInteraction();
 	
 	var remoteFacadeLf = interaction.createLifelineOf(remoteFacade);
@@ -909,7 +909,7 @@ operation UML!Component applySessionFacade_DynamicView(remoteComp : Component, l
 }
 
 
-operation UML!Component applySessionFacade() : Boolean{
+operation Component applySessionFacade() : Boolean{
 
 	if(self.notLegacy()){
 		var mapIntSeqComp = self.getRemoteMesIntoInteractions();
@@ -939,7 +939,7 @@ operation UML!Component applySessionFacade() : Boolean{
 	return false;
 }
 
-operation UML!Component addInterfaceRealization(int : InterfaceRealization) : Boolean {
+operation Component addInterfaceRealization(int : InterfaceRealization) : Boolean {
 	var selfPackage = self.getNearestPackage();
 	var newInt : InterfaceRealization = int.cloneInterfaceRealization();
 	
@@ -949,7 +949,7 @@ operation UML!Component addInterfaceRealization(int : InterfaceRealization) : Bo
 	return false;
 } 
 
-operation UML!Component createNewComponent() : Component{
+operation Component createNewComponent() : Component{
 	var component : Component = new Component; //creo il componente splittato
 	var packageContainer : Package = self.getNearestPackage();  //recupero il package container
 	packageContainer.addElement(component);
@@ -961,7 +961,7 @@ operation UML!Component createNewComponent() : Component{
 }
 
 
-operation UML!Component applyStandardFormat() : Boolean{
+operation Component applyStandardFormat() : Boolean{
 	var mostUsedFormat = self.getTheMostUsedFormat(); //mappa(interaction, map(formato, utilizzo))
 	for(int in mostUsedFormat.keySet()){
 		var stdFormat = mostUsedFormat.get(int).keySet()->first();
@@ -974,7 +974,7 @@ operation UML!Component applyStandardFormat() : Boolean{
 	return false;
 }
 
-operation UML!Component getUsedFormat() : Any{
+operation Component getUsedFormat() : Any{
 	var listOfInteraction = self.getInteractions();
 	var mapFormatTypeUsage : Map(String, Integer) = new Map(String, Integer);
 	var mapUsedFormat : Map(Interaction, Map);
@@ -1001,7 +1001,7 @@ operation UML!Component getUsedFormat() : Any{
 	return mapUsedFormat;
 }
 
-operation UML!Component getTheMostUsedFormat() : Any{
+operation Component getTheMostUsedFormat() : Any{
 	var listOfInteraction = self.getInteractions();
 	var mapMostUsedFormat : Map(Interaction, Map);
 	
@@ -1026,7 +1026,7 @@ operation Map getMostUsed() : Map {
 	return mapFormat;
 }
 
-operation UML!Component reduceNumberOfSupplierConnects(th_maxConnects : Real) : Boolean{
+operation Component reduceNumberOfSupplierConnects(th_maxConnects : Real) : Boolean{
 	
 	info("reduce number of Supplier connects of --> "+self.getName());
 	
@@ -1095,7 +1095,7 @@ operation UML!Component reduceNumberOfSupplierConnects(th_maxConnects : Real) : 
 	}
 }
 
-operation UML!Component reduceNumberOfClientConnects(th_maxConnects : Real) : Boolean{
+operation Component reduceNumberOfClientConnects(th_maxConnects : Real) : Boolean{
 	
 	info("reduce number of clients connects of --> "+ self.getName());
 	
@@ -1162,7 +1162,7 @@ operation UML!Component reduceNumberOfClientConnects(th_maxConnects : Real) : Bo
 	}
 }
 
-operation UML!Component createNewInterfaceRealization() : InterfaceRealization{
+operation Component createNewInterfaceRealization() : InterfaceRealization{
 	var newInt : InterfaceRealization = new  InterfaceRealization();
 	var selfPackage = self.getNearestPackage();
 	
@@ -1171,7 +1171,7 @@ operation UML!Component createNewInterfaceRealization() : InterfaceRealization{
 	return newInt;
 }
 
-operation UML!Component createNewOperation(op : Operation) : Operation{
+operation Component createNewOperation(op : Operation) : Operation{
 	var newOperation = self.createOwnedOperation("operation_decomposition", null,null);
 	var interface_op_new = self.createInterfaceRealization("Interface_for_"+newOperation.getName(), null);
 	
@@ -1180,7 +1180,7 @@ operation UML!Component createNewOperation(op : Operation) : Operation{
 	return newOperation;
 }
 
-operation UML!Component deleteOperation(op : Operation) : Boolean{
+operation Component deleteOperation(op : Operation) : Boolean{
 	if(not self.getOperations()->exists(o | o == op)){
 		showError("Method: deleteOperation(Operation) in component.eol");
 		return false;
@@ -1189,7 +1189,7 @@ operation UML!Component deleteOperation(op : Operation) : Boolean{
 	return true;
 }
 
-operation UML!Component moveToNewComponentDeployedOnNewNode(){
+operation Component moveToNewComponentDeployedOnNewNode(){
 	var criticalOperation = self.getCriticalOperation();
 	
 	if(debug()){
@@ -1203,7 +1203,7 @@ operation UML!Component moveToNewComponentDeployedOnNewNode(){
 	}
 }
 
-operation UML!Component moveToNewComponentDeployedOnNearLessUsedNode() : Boolean{
+operation Component moveToNewComponentDeployedOnNearLessUsedNode() : Boolean{
 	if(self.getCriticalOperation().isUndefined()){
 		showError("the component ["+self.getName()+"] has not critical operation");
 		showError("Method: moveToNewComponentDeployedOnNearLessUsedNode() in component.eol");
@@ -1217,7 +1217,7 @@ operation UML!Component moveToNewComponentDeployedOnNearLessUsedNode() : Boolean
 	}
 }
 
-operation UML!Component redeployOnNearLessUsedNode() {
+operation Component redeployOnNearLessUsedNode() {
 	
 	var lessUsedNode = self.getNearLessUsedNodes()->first();
 	
@@ -1232,11 +1232,11 @@ operation UML!Component redeployOnNearLessUsedNode() {
 	self.redeployOn(lessUsedNode, self.getNodes()->first());
 }
 
-operation UML!Component moveToLessCriticalComponent(){
+operation Component moveToLessCriticalComponent(){
 	self.getCriticalOperation().moveToLessCriticalComponent();
 }
 
-operation UML!Component getAverageDemand() : Real{
+operation Component getAverageDemand() : Real{
 	var operations = self.getOperations()->select(iterator | iterator.hasStereotype("GaStep"));
 	var avgDemand : Real = 0.0;
 	for(op in operations){
@@ -1246,7 +1246,7 @@ operation UML!Component getAverageDemand() : Real{
 	return avgDemand;
 }
 
-operation UML!Component getAverageMaxCPUDemand() : Real{
+operation Component getAverageMaxCPUDemand() : Real{
 	var operations = self.getOperations()->select(iterator | iterator.hasStereotype("GaStep"));
 	var avgDemand : Real = 0.0;
 	
@@ -1259,7 +1259,7 @@ operation UML!Component getAverageMaxCPUDemand() : Real{
 	return avgDemand;
 }
 
-operation UML!Component getAverageMaxDiskDemand() : Real{
+operation Component getAverageMaxDiskDemand() : Real{
 	var operations = self.getOperations()->select(iterator | iterator.hasStereotype("GaStep"));
 	var avgDemand : Real = 0.0;
 	

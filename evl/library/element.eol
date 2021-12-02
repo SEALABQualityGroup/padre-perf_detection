@@ -36,7 +36,7 @@ operation UML!Element cloneAppliedStereotypesFrom(element : UML!Element) {
 }
 
 //clone gli attributi interni dello stereotipo
-operation UML!Element setAttributeValueFrom(stereotype : UML!Stereotype, element : UML!Element){
+operation Element setAttributeValueFrom(stereotype : Stereotype, element : Element){
 	var stereotypeAttr = stereotype.getAttributes();
 	
 	
@@ -64,7 +64,7 @@ operation UML!Element setAttributeValueFrom(stereotype : UML!Stereotype, element
 }
 
 //clone gli attributi interni dello stereotipo
-operation UML!Element setTaggedValue(stereotype : Stereotype, tag : String, value : Any){
+operation Element setTaggedValue(stereotype : Stereotype, tag : String, value : Any){
 	var stereotypeAttr = stereotype.getAttributes();
 	for(attr in stereotypeAttr){
 		if(attr.name <> "base_Element" and attr.name <> "base_NamedElement" and attr.name == tag)
@@ -77,7 +77,7 @@ operation UML!Element setTaggedValue(stereotype : Stereotype, tag : String, valu
 	}	
 }
 
-operation UML!Element hasStereotype(stereotypeName : String) : Boolean {
+operation Element hasStereotype(stereotypeName : String) : Boolean {
 	if(self.isUndefined() or self.getAppliedStereotypes().isUndefined() ){
 		("the element is undefined").println();
 		showError("Method: hasStereotype() in element.eol");
@@ -85,7 +85,7 @@ operation UML!Element hasStereotype(stereotypeName : String) : Boolean {
 	return self.getAppliedStereotypes()->exists(s | s.name = stereotypeName);
 }
 
-operation UML!Element getStereotype(stereotypeName : String) : Stereotype {
+operation Element getStereotype(stereotypeName : String) : Stereotype {
 	if(self.isUndefined() or self.getAppliedStereotypes().isUndefined() ){
 		("the element is undefined").println();
 		showError("Method: getStereotype() in element.eol");
@@ -94,7 +94,7 @@ operation UML!Element getStereotype(stereotypeName : String) : Stereotype {
 	return self.getAppliedStereotypes()->select(s | s.name = stereotypeName)->first();
 }
 
-operation UML!Element reductionServDemand(percentage : Real){
+operation Element reductionServDemand(percentage : Real){
 	if(self.hasStereotype("GaStep")){
 		var stereotype = self.getStereotype("GaStep");
 		var newValue : Sequence(String) = new Sequence(String);
@@ -107,20 +107,20 @@ operation UML!Element reductionServDemand(percentage : Real){
 	}
 }
 
-operation UML!Element getTag(stereotype : String, tag : String) : Any{
+operation Element getTag(stereotype : String, tag : String) : Any{
 	if(not self.hasStereotype(stereotype))
 		return null;
 	return self.getValue(self.getStereotype(stereotype), tag);
 }
 
 
-operation UML!Element isLegacy() : Boolean {
+operation Element isLegacy() : Boolean {
 	if(self.hasStereotype("Allocated")){
 		return true;
 	}
 	return false;
 }
 
-operation UML!Element notLegacy() : Boolean {
+operation Element notLegacy() : Boolean {
 	return not self.isLegacy();
 }
