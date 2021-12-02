@@ -1,8 +1,8 @@
-operation Lifeline getIndexReceiveMOS(message : Message) : MessageOccuranceSpecification{
+operation UML!Lifeline getIndexReceiveMOS(message : UML!Message) : MessageOccuranceSpecification{
 	//TODO
 }
 
-operation Lifeline getBESInitializedBy(op : Operation) : BehaviorExecutionSpecification {
+operation UML!Lifeline getBESInitializedBy(op : Operation) : BehaviorExecutionSpecification {
 
 	return BehaviorExecutionSpecification.allInstances->selectOne(
 		bes : BehaviorExecutionSpecification | 
@@ -12,28 +12,28 @@ operation Lifeline getBESInitializedBy(op : Operation) : BehaviorExecutionSpecif
 	
 }
 
-operation Lifeline removeInteractionFragment(mes : InteractionFragment){
+operation UML!Lifeline removeInteractionFragment(mes : InteractionFragment){
 	self.getCoveredBys().remove(mes);
 }
 
 
-operation Lifeline getNextIncomingMessageStartingFrom() : Sequence (Message){
+operation UML!Lifeline getNextIncomingMessageStartingFrom() : Sequence (UML!Message){
 	return Message.allInstances->select(
-		mes : Message | self.getCoveredBys()->exists(mes.getReceiveEvent()) 
+		mes : UML!Message | self.getCoveredBys()->exists(mes.getReceiveEvent()) 
 	);
 }
 
-operation Lifeline getBESStartedBy(mos : MessageOccurrenceSpecification) : BehaviorExecutionSpecification{
+operation UML!Lifeline getBESStartedBy(mos : MessageOccurrenceSpecification) : BehaviorExecutionSpecification{
 	return self.getCoveredBys()->selectOne(
 		iterator : InteractionFragment | iterator.isTypeOf(BehaviorExecutionSpecification) and iterator.getStart() == mos
 	);
 }
 
-operation Lifeline removeCovered(fragment : InteractionFragment){
+operation UML!Lifeline removeCovered(fragment : InteractionFragment){
 	self.getCoveredBys().remove(fragment);
 }
 
-operation Lifeline removeMsg(msg : Message){
+operation UML!Lifeline removeMsg(msg : UML!Message){
 
 	var mosReceive = msg.getReceiveEvent();
 	var bes = msg.getBES();
@@ -45,28 +45,28 @@ operation Lifeline removeMsg(msg : Message){
 }
 
 // OK BUT CONSIDERS ALL MESSAGES (EVEN THE ONES WITHOUT GaAcqStep)
-operation Lifeline getIncomingMessages() : Map{
-	var messages : Sequence(Message) = new Sequence(Message); 
-	var map : Map(Interaction, Sequence(Message));
+operation UML!Lifeline getIncomingMessages() : Map{
+	var messages : Sequence(UML!Message) = new Sequence(UML!Message); 
+	var map : Map(Interaction, Sequence(UML!Message));
 	var interactions = self.getInteractions();
 	if(interactions.notEmpty()){
 		for(int in interactions ){
 			messages.addAll(int.getMessages());
-			map.put(int, messages->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()));
-			//messages->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()).asList();
+			map.put(int, messages->select(mes : UML!Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()));
+			//messages->select(mes : UML!Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()).asList();
 		}
 	}
 	return map;
 }
 
-operation Lifeline getInteractionUses() : Sequence(InteractionUse){
+operation UML!Lifeline getInteractionUses() : Sequence(UML!InteractionUse){
 	
-	return self.getCoveredBys()->select(iterator | iterator.isTypeOf(InteractionUse)).asSequence();
+	return self.getCoveredBys()->select(iterator | iterator.isTypeOf(UML!InteractionUse)).asSequence();
 	
 }
 
-operation Lifeline getInteractions() : Sequence(Interaction){
-	var interactions : Sequence(Interaction) = new Sequence(Interaction);
+operation UML!Lifeline getInteractions() : Sequence(UML!Interaction){
+	var interactions : Sequence(UML!Interaction) = new Sequence(UML!Interaction);
 	
 	var interUses = self.getInteractionUses();
 	
@@ -81,21 +81,21 @@ operation Lifeline getInteractions() : Sequence(Interaction){
 
 
 // OK BUT CONSIDERS ALL MESSAGES (EVEN THE ONES WITHOUT GaAcqStep)
-operation Lifeline getOutgoingMessages() : Map{
-	var messages : Sequence(Message) = new Sequence(Message); 
-	var map : Map(Interaction, Sequence(Message));
+operation UML!Lifeline getOutgoingMessages() : Map{
+	var messages : Sequence(UML!Message) = new Sequence(UML!Message); 
+	var map : Map(Interaction, Sequence(UML!Message));
 	var interactions = self.getInteractions();
 	if(interactions.notEmpty()){
 		for(int in interactions ){
 			messages.addAll(int.getMessages());
-			map.put(int, messages->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()));
+			map.put(int, messages->select(mes : UML!Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()));
 			//messages->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()).asList();
 		}
 	}
 	return map;
 }
 
-/*operation Lifeline getOutgoingMessages() : Sequence(Message){
+/*operation UML!Lifeline getOutgoingMessages() : Sequence(Message){
 	
 	var messages : Sequence(Message) = new Sequence(Message); 
 	
@@ -110,7 +110,7 @@ operation Lifeline getOutgoingMessages() : Map{
 	return messages->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == self.getRepresents().getType() and mes.notReturn()).asSequence();
 }*/
 
-operation Lifeline getNextIncomingMessage(mes : Message) : Message{
+operation UML!Lifeline getNextIncomingMessage(mes : UML!Message) : UML!Message{
 
 	var incomingMes = self.getIncomingMessages();
 	
@@ -122,7 +122,7 @@ operation Lifeline getNextIncomingMessage(mes : Message) : Message{
 	return null;
 } 
 
-operation Lifeline getNextOutgoingMessage(mes : Message) : Message{
+operation UML!Lifeline getNextOutgoingMessage(mes : UML!Message) : UML!Message{
 	var outgoingMes = self.getOutgoingMessages();
 	
 	for (m in outgoingMes){
@@ -132,6 +132,6 @@ operation Lifeline getNextOutgoingMessage(mes : Message) : Message{
 	return null;
 } 
 
-operation Lifeline getBESes() : Sequence(BehaviorExecutionSpecification){
+operation UML!Lifeline getBESes() : Sequence(BehaviorExecutionSpecification){
 	return self.getCoveredBys()->select(cov | cov.isTypeOf(BehaviorExecutionSpecification)).asSequence();
 }
