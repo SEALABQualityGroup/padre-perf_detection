@@ -11,27 +11,6 @@
 
 operation UML!Operation F_probExec_fuzzy() : Real{
 	
-//	if(self.isKindOf(UML!Operation)){
-		//self.getName().println("operation ");
-	//}
-
-	/*var msgs = Message.all->select(msg | msg.hasStereotype("GaStep"));
-	
-	var probs : Sequence(Real);
-	
-	for(msg in msgs){
-		if(msg.getTag("GaStep", "prob").isDefined()){
-			var firstParent = msg.getInteraction().getFragments()->first().getMessage().getTag("GaStep", "prob").asReal();
-			var prob = msg.getTag("GaStep", "prob" ).asReal() * firstParent;
-			probs.add(prob);
-		}
-		else
-			probs.add(1);
-	}
-	
-	var upperBound = probs.max();
-	var lowerBound = probs.min();*/
-	
 	var upperBound = messages_bounds.get(0);
 	var lowerBound = messages_bounds.get(1);
 	
@@ -47,7 +26,6 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	
 	var listOfMes = self.getAllOwnMessages();
 	
-	//listOfMes.println("LIST MESS --> ");
 	
 	var fValue : Real = 0.0;
 	
@@ -63,33 +41,9 @@ operation UML!Operation F_probExec_fuzzy() : Real{
 	
 	return fValue;
 	
-	/*
-	fValue.println("Mes "+ self.name + " prob exec:");
-	if(fValue == 0){
-		//log("The operation has any set demands. Returns to avoid negative values.");
-		return 0;
-	}
-	
-	(upperBound - fValue).println("Numerator: ");
-	(upperBound - lowerBound).println("Denominatore: ");
-	
-	return 1-( (upperBound - fValue) / (upperBound - lowerBound)).println("Prob exec: ");*/
 }
 
 operation UML!Operation F_resDemand_fuzzy() : Real{
-	//info("UML!Operation F_resDemand_fuzzy() : Real");	
-	
-	/*var msgs = Message.all->select(m | m.hasStereotype("GaStep"));
-	
-	var execTimes : Sequence(Real);
-	
-	for(m in msgs){
-		if(m.getTag("GaStep", "execTime")->first().isDefined())
-			execTimes.add(m.getTag("GaStep", "execTime")->first().asReal());
-	}
-	
-	var upperBound = execTimes.max();
-	var lowerBound = execTimes.min();*/
 	
 	var upperBound = exec_times_bounds.get(0);
 	var lowerBound = exec_times_bounds.get(1);
@@ -125,18 +79,6 @@ operation UML!Operation F_resDemand_fuzzy() : Real{
 
 operation UML!Operation F_T_fuzzy() : Real{
 	info("Operation F_T_fuzzy() : Real");
-	
-	/*var useCases = UseCase.all;//->select(uc | uc.hasStereotype("GaScenario"));
-	
-	var throughputs : Sequence(Real);
-	for(uc in useCases){
-		if(uc.hasStereotype('GaScenario') and not uc.getTag("GaScenario", "throughput").isEmpty()){
-			throughputs.add(uc.getTag("GaScenario", "throughput")->first().asReal());
-		}
-	}
-	
-	var upperBound = throughputs.max();
-	var lowerBound = throughputs.min();*/
 	
 	var upperBound = throughputs_bounds.get(0);
 	var lowerBound = throughputs_bounds.get(1);
@@ -239,18 +181,6 @@ operation UML!Node F_maxQL_fuzzy() : Real {
 operation UML!Node F_maxHwUtil_fuzzy() : Real {
 	if(not self.hasStereotype("GaExecHost") or not self.getTag("GaExecHost", "utilization")->first().isDefined())
 		return 0;
-//	
-//	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
-//		
-//	var utils : Sequence(Real);
-//	
-//	for(n in nodes){
-//		//if(n.getTag("GaExecHost", "utilization")->first().isDefined() )
-//			utils.add(n.getTag("GaExecHost", "utilization")->first().asReal());
-//	}
-//	
-//	var upperBound = utils.max();
-//	var lowerBound = utils.min();
 
 	var upperBound = max_hw_util_bounds.max();
 	var lowerBound = max_hw_util_bounds.min();	
@@ -265,9 +195,6 @@ operation UML!Node F_maxHwUtil_fuzzy() : Real {
 }
 
 operation UML!Component F_resDemand_fuzzy() : Real{
-	//info("UML!Component F_resDemand(th_maxOpResDemand : List( Real ), th_minResDemand : List( Real )) : Boolean");
-	/*if(not self.hasStereotype("PaRunTInstance") ) 
-		return false;*/
 
 	var msgs = Message.all->select(m | m.hasStereotype("GaStep") and m.getTag("GaStep", "execTime")->first().isDefined());
 	
@@ -401,21 +328,8 @@ operation UML!Component F_RT_fuzzy() : Real {
 
 operation UML!Component F_numSupplierConnects_fuzzy() : Real{
 	
-	var cmps = Component.all;
-	
-	var upperBound : Real = cmps->first().getProvideds().size();
-	var lowerBound : Real = cmps->first().getProvideds().size();
-	
-	//retrieves the upper and lower bounds of the numbero of provided
-	//interface. Basically, it seeks the maximum and minimum number
-	//of interfaces, respectively.
-	for(c in cmps){
-		var i = c.getProvideds().size();
-		if(i >= upperBound)
-			upperBound = i;
-		else if(i <= lowerBound)
-			lowerBound = i;
-	}
+	var upperBound = num_supplier_connects_bounds.get(0);
+	var lowerBound = num_supplier_connects_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -433,21 +347,9 @@ operation UML!Component F_numSupplierConnects_fuzzy() : Real{
 }
 
 operation UML!Component F_numClientConnects_fuzzy() : Real{
-	var cmps = Component.all;
 	
-	var upperBound : Real = cmps->first().getProvideds().size();
-	var lowerBound : Real = cmps->first().getProvideds().size();
-	
-	//retrieves the upper and lower bounds of the numbero of provided
-	//interface. Basically, it seeks the maximum and minimum number
-	//of interfaces, respectively.
-	for(c in cmps){
-		var i = c.getRequireds().size().asReal();
-		if(i >= upperBound)
-			upperBound = i;
-		else if(i <= lowerBound)
-			lowerBound = i;
-	}
+	var upperBound = num_client_connects_bounds.get(0);
+	var lowerBound = num_client_connects_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -465,23 +367,8 @@ operation UML!Component F_numClientConnects_fuzzy() : Real{
 
 operation UML!Component F_numMsgsIn_fuzzy() : Real{
 	
-	var lfs = Lifeline.all;
-		
-	if(lfs.isEmpty())
-		return 0;
-	
-	var msgs = Message.all;	
-	var first = msgs->select(mes : Message | mes.notReturn() and mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == lfs->first().getRepresents().getType()).size();
-	var upperBound = first;
-	var lowerBound = first;
-	
-	for(l in lfs){
-		var numMsg = msgs->select(mes : Message | mes.notReturn() and mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
-		if(numMsg >= upperBound)
-			upperBound = numMsg;
-		else if (numMsg <= lowerBound)
-			lowerBound = numMsg;
-	}	
+	var upperBound = num_mgs_in_bounds.get(0);
+	var lowerBound = num_mgs_in_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		return 0;
@@ -494,7 +381,7 @@ operation UML!Component F_numMsgsIn_fuzzy() : Real{
 	
 	var fValue : Real = 0.0;
 	for(slf in selfLfs){
-		fValue = msgs->select(mes : Message | mes.notReturn() and mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == slf.getRepresents().getType()).size();
+		fValue = MESSAGES->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == slf.getRepresents().getType()).size();
 	}
 	
 	//it avoids negative values	
@@ -505,23 +392,9 @@ operation UML!Component F_numMsgsIn_fuzzy() : Real{
 }
 
 operation UML!Component F_numMsgsOut_fuzzy() : Real{
-	var lfs = Lifeline.all;
 		
-	if(lfs.isEmpty())
-		return 0;
-	
-	var msgs = Message.all;	
-	var first = msgs->select(mes : Message | mes.notReturn() and mes.getSendEvent().getCovereds()->first().getRepresents().getType() == lfs->first().getRepresents().getType()).size();
-	var upperBound : Real = first;
-	var lowerBound : Real = first;
-	
-	for(l in lfs){
-		var numMsg = msgs->select(mes : Message | mes.notReturn() and mes.getSendEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
-		if(numMsg >= upperBound)
-			upperBound = numMsg;
-		else if (numMsg <= lowerBound)
-			lowerBound = numMsg;
-	}	
+	var upperBound = num_mgs_out_bounds.get(0);
+	var lowerBound = num_mgs_out_bounds.get(1);
 	
 	if(upperBound == lowerBound){
 		return 0;
@@ -534,7 +407,7 @@ operation UML!Component F_numMsgsOut_fuzzy() : Real{
 	
 	var fValue : Real = 0.0;
 	for(slf in selfLfs){
-		fValue = msgs->select(mes : Message | mes.notReturn() and mes.getSendEvent().getCovereds()->first().getRepresents().getType() == slf.getRepresents().getType()).size();
+		fValue = MESSAGES->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == slf.getRepresents().getType()).size();
 	}
 	
 	//it avoids negative values	
@@ -546,21 +419,6 @@ operation UML!Component F_numMsgsOut_fuzzy() : Real{
 
 
 operation UML!Component F_maxNetUtil_fuzzy() : Real{
-
-
-	/*var paths = CommunicationPath.all->select(p | p.hasStereotype("GaCommChannel") and p.getTag("GaCommChannel","utilization")->first().isDefined());
-	
-	if(paths.isEmpty())
-		return 0;
-	
-	var utils : Sequence(Real);
-	
-	for(p in paths){
-		utils.add(p.getTag("GaCommChannel","utilization")->first().asReal());
-	}
-
-	var upperBound = utils.max();
-	var lowerBound = utils.min();*/
 	
 	if(net_util_bounds.isUndefined())
 		return 0;
@@ -604,29 +462,6 @@ operation UML!Component F_maxNetUtil_fuzzy() : Real{
 
 operation UML!Component F_numRemMsgs_fuzzy() : Real{
 	
-	/*var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
-
-	var cmps = Component.all;
-	
-	var remMsgs : Sequence(Real);
-	
-	var numRemMsg : Integer = 0;
-	for(c in cmps){
-		numRemMsg = 0;
-		for(mes in seqOfMes){
-			var lf = mes.getReceiveLifeline(); //lifeline destinataria
-			var component = lf.getRepresents().getType(); //componente
-							
-			if(component.isTypeOf(Component) and component.isRemote(c) ){ // i due componenti sono remoti
-				numRemMsg = numRemMsg + 1;
-			}	
-		}
-		remMsgs.add(numRemMsg);
-	}
-	
-	var upperBound = remMsgs.max();
-	var lowerBound = remMsgs.min();*/
-	
 	var upperBound = remote_messages_bounds.get(0);
 	var lowerBound = remote_messages_bounds.get(1);
 	
@@ -663,32 +498,8 @@ operation UML!Component F_numRemMsgs_fuzzy() : Real{
 
 operation UML!Component F_numRemInst_fuzzy() : Real{
 	
-//	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
-
-	/*var cmps = Component.all;
-	
-	var remInsts : Sequence(Real);
-	
-	var numRem : Integer = 0;
-	
-	var numRemComps = 0;
-	for(c in cmps){
-		numRemComps = 0;
-		for(c2 in cmps){	
-			if(not (c2 == c) and c.isRemote(c2)){ // i due componenti sono remoti
-				c.println("component C --> ");
-				c2.println("component C2 --> ");
-				numRemComps = numRemComps + 1;
-			}
-		}
-		remInsts.add(numRemComps);
-	}
-	
-	var upperBound = remInsts.max();
-	var lowerBound = remInsts.min();*/
-	
-	var upperBound = rem_insts_bounds.max();
-	var lowerBound = rem_insts_bounds.min();
+	var upperBound = rem_insts_bounds_max;
+	var lowerBound = rem_insts_bounds_min;
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -697,20 +508,8 @@ operation UML!Component F_numRemInst_fuzzy() : Real{
 	
 	var remInsts : Sequence(Real);
 	remInsts.clear();
-//	var numRem = 0;
-//	for(c in cmps){
-//		numRem = 0;
-//		var lfs = c.getLifelines(); //lifeline destinataria
-//		for(ls in lfs){
-//			var component = lf.getRepresents().getType(); //componente
-//			if(component.isTypeOf(Component) and component.isRemote(self) ){ // i due componenti sono remoti
-//				numRem = numRem + 1;
-//			}
-//			remInsts.add(numRem);	
-//		}
-//	}
 	
-	for(c in cmps){
+	for(c in COMPONENTS){
 		numRemComps = 0;	
 		if(not (c == self) and c.isRemote(self)){ // i due componenti sono remoti
 			numRemComps = numRemComps + 1;
