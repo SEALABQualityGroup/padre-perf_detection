@@ -1,10 +1,10 @@
 operation calc_messages_bounds () : List(Real){ 
 
-	var msgs = Message.all->select(msg | msg.hasStereotype("GaStep"));
+	var msgs = Message.all->select(msg | msg.hasStereotype("GaStep") and msg.hasStereotype("GaStep"));
 	
 	var probs : Sequence(Real);
 	
-	for(msg in msgs){
+	for(msg in MESSAGES){
 		if(msg.getTag("GaStep", "prob").isDefined()){
 			var firstParent = msg.getInteraction().getFragments()->first().getMessage().getTag("GaStep", "prob").asReal();
 			var prob = msg.getTag("GaStep", "prob" ).asReal() * firstParent;
@@ -23,13 +23,12 @@ operation calc_messages_bounds () : List(Real){
 
 operation calc_exec_times_bounds() : List(Real){
 	
-	var msgs = Message.all->select(m | m.hasStereotype("GaStep"));
+	var msgs = MESSAGES->select(m | m.hasStereotype("GaStep") and m.getTag("GaStep", "execTime")->first().isDefined());
 	
 	var execTimes : Sequence(Real);
 	
 	for(m in msgs){
-		if(m.getTag("GaStep", "execTime")->first().isDefined())
-			execTimes.add(m.getTag("GaStep", "execTime")->first().asReal());
+		execTimes.add(m.getTag("GaStep", "execTime")->first().asReal());
 	}
 	
 	var bounds : List(Real) = new List(Real);
@@ -40,7 +39,7 @@ operation calc_exec_times_bounds() : List(Real){
 }
 
 operation calc_throughputs_bounds() : List(Real) {
-	var useCases = UseCase.all->select(uc | uc.hasStereotype("GaScenario") and uc.getTag("GaScenario", "throughput").notEmpty());
+	var useCases = USECASES->select(uc | uc.getTag("GaScenario", "throughput").notEmpty());
 	
 	var throughputs : Sequence(Real);
 	for(uc in useCases){
@@ -57,27 +56,15 @@ operation calc_throughputs_bounds() : List(Real) {
 }
 
 operation calc_remote_messages_bounds() : List(Real) {
-	var seqOfMes = Message.all->select(m | m.hasStereotype("GaStep") and not m.isReturn());
-
-	var cmps = Component.all;
-	
+		
 	var remMsgs : Sequence(Real);
 	
-	var numRemMsg : Integer = 0;
-	for(c in cmps){
-		numRemMsg = 0;
-		for(mes in seqOfMes){
-			var lf = mes.getReceiveLifeline(); //lifeline destinataria
-			var component = lf.getRepresents().getType(); //componente
-							
-			if(component.isTypeOf(Component) and c <> component and component.isRemote(c) ){ // i due componenti sono remoti
-				numRemMsg = numRemMsg + 1;
-			}	
-		}
-		remMsgs.add(numRemMsg);
+	for(lf in LIFELINES){
+		var moses = lf.getCoveredBys()->select(i : InteractionFragment | i.isTypeOf(MessageOccurrenceSpecification));
+		var messages = moses->select(i | i.message.isRemote());
+		remMsgs.add(messages.size());
 	}
-	
-	
+		
 	var bounds : List(Real) = new List(Real);
 	bounds.add(remMsgs.max());
 	bounds.add(remMsgs.min());
@@ -87,7 +74,7 @@ operation calc_remote_messages_bounds() : List(Real) {
 
 
 operation calc_net_util_bounds() : List(Real) {
-	var paths = CommunicationPath.all->select(p | p.hasStereotype("GaCommChannel") and p.getTag("GaCommChannel","utilization")->first().isDefined());
+	var paths = PATHS->select(p | p.getTag("GaCommChannel","utilization")->first().isDefined());
 	
 	if(paths.isEmpty())
 		return null;
@@ -105,32 +92,35 @@ operation calc_net_util_bounds() : List(Real) {
 	return bounds;
 }
 
-operation calc_rem_insts_bounds() : List(Real){
-	var cmps = Component.all;
-	
-	var remInsts : Sequence(Real);
-	
-	var numRemComps = 0;
-	for(c in cmps){
+operation calc_rem_insts_bounds() {//: List(Real){
+	var numRemComps = 0;	
+	var i = 0;
+	var components_length = COMPONENTS.size();
+	while(i < components_length-1){
+		var j = i + 1; 
 		numRemComps = 0;
-		for(c2 in cmps){	
-			if(c2 <> c and c.isRemote(c2)){ // i due componenti sono remoti
+		while(j < components_length){
+			if(COMPONENTS[i].isRemote(COMPONENTS[j])){
 				numRemComps = numRemComps + 1;
-			}
+			}			
+			j = j+1;
 		}
-		remInsts.add(numRemComps);
+		
+		if(numRemComps > rem_insts_bounds_max){
+			rem_insts_bounds_max = numRemComps;
+		} 
+		if(numRemComps < rem_insts_bounds_min){
+			rem_insts_bounds_min = numRemComps;
+		}
+		
+		i = i +1;
 	}
 	
-	var bounds : List(Real) = new List(Real);
-	bounds.add(remInsts.max());
-	bounds.add(remInsts.min());
-	
-	return bounds;
 }
 
 operation calc_max_hw_util_bounds () : List(Real){
 	
-	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
+	var nodes = NODES->select(n | n.getTag("GaExecHost", "utilization")->first().isDefined());
 		
 	var utils : Sequence(Real);
 	
@@ -145,3 +135,102 @@ operation calc_max_hw_util_bounds () : List(Real){
 	
 	return bounds;
 }
+
+
+operation calc_num_supplier_connects_bounds () : List(Real){
+	
+	var upperBound : Real = COMPONENTS->first().getProvideds().size();
+	var lowerBound : Real = COMPONENTS->first().getProvideds().size();
+	
+	//retrieves the upper and lower bounds of the numbero of provided
+	//interface. Basically, it seeks the maximum and minimum number
+	//of interfaces, respectively.
+	for(c in COMPONENTS){
+		var i = c.getProvideds().size();
+		if(i >= upperBound)
+			upperBound = i;
+		else if(i <= lowerBound)
+			lowerBound = i;
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+
+}
+
+
+operation calc_num_client_connects_bounds () : List(Real) {
+	
+	var upperBound : Real = COMPONENTS->first().getProvideds().size();
+	var lowerBound : Real = COMPONENTS->first().getProvideds().size();
+	
+	//retrieves the upper and lower bounds of the numbero of provided
+	//interface. Basically, it seeks the maximum and minimum number
+	//of interfaces, respectively.
+	for(c in COMPONENTS){
+		var i = c.getRequireds().size().asReal();
+		if(i >= upperBound)
+			upperBound = i;
+		else if(i <= lowerBound)
+			lowerBound = i;
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+	
+}
+
+operation  calc_num_mgs_in_bounds() : List(Real){
+			
+	if(LIFELINES.isEmpty())
+		return 0;
+	
+	var msgs = Message.all;	
+	var first = MESSAGES->select(mes : UML!Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == LIFELINES->first().getRepresents().getType()).size();
+	var upperBound = first;
+	var lowerBound = first;
+	
+	for(l in LIFELINES){
+		var numMsg = MESSAGES->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
+		if(numMsg >= upperBound)
+			upperBound = numMsg;
+		else if (numMsg <= lowerBound)
+			lowerBound = numMsg;
+	}
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+}
+
+operation calc_num_mgs_out_bounds() : List(Real){
+	
+	if(LIFELINES.isEmpty())
+		return 0;
+	
+	var first = MESSAGES->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == LIFELINES->first().getRepresents().getType()).size();
+	var upperBound = first;
+	var lowerBound = first;
+	
+	for(l in LIFELINES){
+		var numMsg = MESSAGES->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
+		if(numMsg >= upperBound)
+			upperBound = numMsg;
+		else if (numMsg <= lowerBound)
+			lowerBound = numMsg;
+	}	
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+}
+
