@@ -1271,3 +1271,14 @@ operation Component getAverageMaxDiskDemand() : Real{
 		return (avgDemand/operations.size());
 	return avgDemand;
 }
+
+operation UML!Component getMeanUtilization(){
+	var nodes = self.getNodes();
+	var meanUtil = 0.0;
+	for(node in nodes){
+		meanUtil = meanUtil + node.getUtilization();
+	}
+	meanUtil = meanUtil / nodes.size();
+	return meanUtil;
+}
+

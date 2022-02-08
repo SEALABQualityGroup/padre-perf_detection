@@ -111,7 +111,7 @@ operation UML!Operation F_T_fuzzy() : Real{
 operation UML!Operation F_maxHwUtil_fuzzy() : Real{
 	info("UML!Operation F_maxHwUtil(th_maxHwUtil : Real) : Boolean");	
 	
-	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
+	/*var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
 		
 	var utils : Sequence(Real);
 	
@@ -121,7 +121,10 @@ operation UML!Operation F_maxHwUtil_fuzzy() : Real{
 	}
 	
 	var upperBound = utils.max();
-	var lowerBound = utils.min();
+	var lowerBound = utils.min();*/
+	
+	var upperBound = max_hw_util_bounds.max();
+	var lowerBound = max_hw_util_bounds.min();
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");
@@ -244,7 +247,7 @@ operation UML!Component F_probExec_fuzzy() : Real {
 
 operation UML!Component F_maxHwUtil_fuzzy() : Real{
 
-	var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
+	/*var nodes = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
 	
 	if(nodes.isEmpty())
 		return 0;
@@ -256,7 +259,10 @@ operation UML!Component F_maxHwUtil_fuzzy() : Real{
 	}
 	
 	var upperBound = utils.max();
-	var lowerBound = utils.min();
+	var lowerBound = utils.min();*/
+	
+	var upperBound = max_hw_util_bounds.max();
+	var lowerBound = max_hw_util_bounds.min();
 	
 	if(upperBound == lowerBound){
 		//log("Upper and Lower Bounds have the same value. Returns 1.");

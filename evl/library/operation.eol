@@ -1392,7 +1392,15 @@ operation Operation getMeanDemand() : Real {
 	return meanDem;
 }
 
-operation UML!Operation test(){
-	for(s in Stereotype.all)
-		s.println();
-}
+operation UML!Operation getMeanUtilization() : Real{
+	var nodes = self.getOwner().getNodes();
+	var meanUtil = 0.0;
+	for(node in nodes){
+		meanUtil = meanUtil + node.getUtilization();
+	}
+	meanUtil = meanUtil / nodes.size();
+	return meanUtil;
+
+} 
+
+
