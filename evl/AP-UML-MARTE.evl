@@ -87,7 +87,7 @@ context UML!Operation {
 			if (self.getOwner().isTypeOf(Component) and
 			self.F_probExec_fuzzy() <> 0 and 
 			fuzziness >= prob_PAs){
-				paf_map.put(self.getName(), fuzziness);	
+				paf_map.put(self.getName(), fuzziness.asDouble());	
 				return false;
 			}
 			return true;
@@ -117,7 +117,7 @@ context UML!Node {
 		check{
 			var fuzziness = self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy(); 
 			if(fuzziness >= prob_PAs){
-				cps_map.put(self.getName(), fuzziness);
+				cps_map.put(self.getName(), fuzziness.asDouble());
 				return false;
 			}
 			return true;
@@ -139,7 +139,7 @@ context UML!Component {
  		check{
  			var fuzziness = self.F_resDemand_fuzzy() * ( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() );
  			if (fuzziness >= prob_PAs and self.F_probExec_fuzzy() <> 0){
-				ep_map.put(self.getName(), fuzziness);
+				ep_map.put(self.getName(), fuzziness.asDouble());
 				return false; 				
  			}
  			return true;
@@ -162,7 +162,7 @@ context UML!Component {
 			var fuzziness = (self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
 				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
  			if (fuzziness >= prob_PAs){
-				blob_container_map.put(self.getName(), fuzziness);
+				blob_container_map.put(self.getName(), fuzziness.asDouble());
 				return false; 				
  			}
  			return true;
@@ -178,7 +178,7 @@ context UML!Component {
 			var fuzziness = ( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
 				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
  			if (fuzziness >= prob_PAs){
-				blob_controller_map.put(self.getName(), fuzziness);
+				blob_controller_map.put(self.getName(), fuzziness.asDouble());
 				return false; 				
  			}
  			return true;			
@@ -203,7 +203,7 @@ context UML!Component {
  			var fuzziness = (self.F_numRemMsgs_fuzzy() * 
  				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy()));
  			if (fuzziness >= prob_PAs){
-				blob_controller_map.put(self.getName(), fuzziness);
+				blob_controller_map.put(self.getName(), fuzziness.asDouble());
 				return false; 				
  			}
  			return true;
