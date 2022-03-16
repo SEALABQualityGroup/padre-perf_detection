@@ -1,7 +1,7 @@
 import "metric_functions.eol";
 import "metric_functions_fuzzy.eol";
 //import "thresholds_eSsopper.eol";
-import "thresholds_trainticket.eol";
+//import "thresholds_trainticket.eol";
 
 //libraries
 import "library/artifact.eol";
@@ -24,11 +24,61 @@ import "library/package.eol";
 
 //HELPER
 import "library/HELPER.eol";
+import "fuzzy_helper.eol";
 
-pre{
+pre{ // exec time via java 2500ms
 	//showThresholds();
+	var prob_PAs  = prob_to_be_pa;
+	
+	var MESSAGES = Message.all->select(mes : Message | mes.notReturn());//->select(msg | msg.hasStereotype("GaStep")); //exec time via java 9ms
+	var USECASES = UseCase.all->select(uc | uc.hasStereotype("GaScenario")); 
+	var LIFELINES = Lifeline.all;
+	var PATHS = CommunicationPath.all->select(p | p.hasStereotype("GaCommChannel") and p.getTag("GaCommChannel","utilization")->first().isDefined());
+	var COMPONENTS = Component.all;
+	var NODES = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
+	
+	var rem_insts_bounds_max = 0;
+	var rem_insts_bounds_min = 2000;
+	calc_rem_insts_bounds();
+	
+	// *_bounds is a list of 2 real. Max position 0, Min position 1
+	var messages_bounds = calc_messages_bounds(); // exec time via java 45ms
+	var exec_times_bounds = calc_exec_times_bounds(); // exec time via java 20ms
+	var throughputs_bounds = calc_throughputs_bounds(); // exec time via java 8ms
+	var remote_messages_bounds = calc_remote_messages_bounds();// exec time via java 1377 (old 5270 ms) 
+	var net_util_bounds = calc_net_util_bounds();// exec time via java 10ms
+	//var rem_insts_bounds = calc_rem_insts_bounds();// exec time via java 1700ms (old 2226ms)
+	var max_hw_util_bounds = calc_max_hw_util_bounds();// exec time via java 34ms
+	var num_supplier_connects_bounds = calc_num_supplier_connects_bounds();
+	var num_client_connects_bounds = calc_num_client_connects_bounds();
+	var num_mgs_in_bounds = calc_num_mgs_in_bounds();
+	var num_mgs_out_bounds = calc_num_mgs_out_bounds();
+	
+	var UTIL_CRITICAL_TH = 0.0;
+    for(n in NODES){
+    	UTIL_CRITICAL_TH = UTIL_CRITICAL_TH + n.getUtilization();
+    }
+    UTIL_CRITICAL_TH = UTIL_CRITICAL_TH / NODES.size();
+    //UTIL_CRITICAL_TH.println("CRITICAL HW UTIL THRESHOLD: ");
+	
+	
+	var fuzzy_values : Map (String, Map(String, Real)) = new Map(String, Map(String, Real));
+	var paf_map : Map(String,Real) = new Map();
+	var cps_map : Map(String,Real) = new Map();
+	var ep_map : Map(String,Real) = new Map();
+	var blob_container_map : Map(String,Real) = new Map();
+	var blob_controller_map : Map(String,Real) = new Map();
+	var est_map : Map(String,Real) = new Map();
 }
 
+post{
+	fuzzy_values.put("paf", paf_map);
+	fuzzy_values.put("cps", cps_map);
+	fuzzy_values.put("ep", ep_map);
+	fuzzy_values.put("blob_container", blob_container_map);
+	fuzzy_values.put("blob_controller", blob_controller_map);
+	fuzzy_values.put("est", est_map);
+}
 
 /*********************************************************************************************
  *																							 *
@@ -37,66 +87,21 @@ pre{
  *										reviewed											 *
  *********************************************************************************************/
 
+// exec via Java 600ms 
 context UML!Operation {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique PaF {
-		check: 
-			(self.F_probExec_fuzzy() * self.F_resDemand_fuzzy().println("Demand -> ") *
-				(self.F_T_fuzzy().println("X ").println("Prob -> ") + self.F_maxHwUtil_fuzzy().println("hw util ").println("Prob -> ") )).println("PaF ") < 0.5 
+		check{ 
+			var fuzziness = (self.F_resDemand_fuzzy() *	(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() ));
+			if (self.getOwner().isTypeOf(Component) and
+			self.F_probExec_fuzzy() <> 0 and 
+			fuzziness >= prob_PAs){
+				paf_map.put(self.getName(), fuzziness.asDouble());	
+				return false;
+			}
+			return true;
+		} 
 		message : "PaF <Operation> " + self.name
-		fix {
-			title : "Move it to a New Component deployed to a New Node"
-			do {
-				log("--------------");
-				log("pattern PaF");
-				log("moveOpNCNN on");
-				log("self --> "+self.getName());
-				self.moveToNewOwnerDeployedOnNewNode(); 
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Move it to a New Component deployed to the Less Used neighbour Node"
-			do{
-				self.moveToNewOwnerDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Component to the Less Used neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Change its Component to the one with the Lowest Demand"
-			do{
-				log("--------------");
-				log("pattern PaF");
-				log("moveOpLC on");
-				log("self --> "+self.getName());
-				self.moveToLessCriticalOwner();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Redeploy its Component to New Node"
-			do{
-				log("--------------");
-				log("pattern PaF");
-				log("moveCompNN on");
-				log("self --> "+self.getName());
-				self.moveToNewNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title: "Decomposition"
-			do{
-				self.decomposition();
-			}
-		}
 	}
 }
 
@@ -114,191 +119,43 @@ context UML!Operation {
  *							MAX HW UTIL is in the first position							 *
  *					CPU max and min are in second and third position						 *	
  *					DISK max and min are in fourth and fifth position						 *
- *********************************************************************************************
+ *********************************************************************************************/
  
-context Node {
+context UML!Node {
+	guard: self.getUtilization() > UTIL_CRITICAL_TH
 	critique CPS {
-		check: 
-			( self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy().println() ).println("CPS ") < 0.65
+		check{
+			var fuzziness = self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy(); 
+			if(fuzziness >= prob_PAs){
+				cps_map.put(self.getName(), fuzziness.asDouble());
+				return false;
+			}
+			return true;
+		}
 		message : "CPS <" + self.type.name + "> " + self.name
-		fix {
-			title : "Move it to a new Component deployed to a new Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move it to a new Component deployed to the less used neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its owning Component "+self.name+" to the less used neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Change its owning Component from "+self.name+" to the one with the lowest demand"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
 	}
 }
-
-/*
-context Node {
-	critique CPS {
-		check: 
-			not( (self.F_maxQL(th_maxQL()) and self.F_maxCpuUtil(th_maxHwUtil()->second()) and self.F_resDemandCpuGreaterOrEqualThan(th_maxResDemand()->first())) or
-				(self.F_maxQL(th_maxQL()) and self.F_maxDiskUtil(th_maxHwUtil()->fourth()))
-			)
-		message : "CPS <Node> " + self.getName()
-		fix {
-			title : "Move it to a New Component deployed to a New Node"
-			do {
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpNCNN on");
-				log("self --> "+self.getName());
-				self.moveToNewComponentDeployedOnNewNode(); 
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Move it to a New Component deployed to the Less Used neighbour Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpNCLN on");
-				log("self --> "+self.getName());
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Redeploy its Component to the Less Used neighbour Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveCompLN on");
-				log("self --> "+self.getName());
-				self.redeployOnNearLessUsedNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Change its Component to the one with the Lowest Demand"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveOpLC on");
-				log("self --> "+self.getName());
-				self.moveToLessCriticalComponent();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Deploy its Component to New Node"
-			do{
-				log("--------------");
-				log("pattern CPS");
-				log("moveCompNN on");
-				log("self --> "+self.getName());
-				self.redeployOnNewNode();
-				log("--------------");
-				log("");
-			}
-		}
-	}
-}
-
-/*
-context Node {
-	critique CPS_DISK {
-		check: 
-			not ( self.F_maxQL(th_maxQL()) and self.F_maxDiskUtil(th_maxHwUtil()->fourth()) )
-		message : "CPS_DISK <Node> " + self.getName()
-		fix {
-			title : "Move its critical Operation to a New Component deployed to a New Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move its critical Operation to a New Component deployed to the Less Used Neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Critical Component to the Less Used Neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Critical Component to New Node"
-			do{
-				self.redeployOnNewNode();
-			}
-		}
-		fix{
-			title : "Change its owning Component from "+self.name+" to the one with the lowest demand"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
-	}
-}*/
 
 /*********************************************************************************************
  *																							 *
  *	 								Extensive Processing  									 *
  *							Antipattern Detection and Validation							 *
  *										reviewed											 *
- *********************************************************************************************
+ *********************************************************************************************/
 
+// exec via Java 300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique ExtensiveProcessingAP{
- 		check:
- 			(self.F_resDemand_fuzzy() * 
- 			( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() ).println("EP ") < 0.65
- 					and not self.F_probExec())
+ 		check{
+ 			var fuzziness = self.F_resDemand_fuzzy() * ( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() );
+ 			if (fuzziness >= prob_PAs and self.F_probExec_fuzzy() <> 0){
+				ep_map.put(self.getName(), fuzziness.asDouble());
+				return false; 				
+ 			}
+ 			return true;
+ 		}
  		message : "EP <" + self.type.name + "> " + self.name
- 		fix {
-			title : "Move it to a new Component deployed to a new Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move it to a new Component deployed to the less used neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its owning Component "+self.name+" to the less used neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Change its owning Component from "+self.name+" to the one with the lowest demand"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
  	}
 }
 
@@ -307,129 +164,40 @@ context UML!Component {
  *								Blob Controller & Container									 *
  *							Antipattern Detection and Validation							 *
  *										reviewed 											 *
- *********************************************************************************************
+ *********************************************************************************************/
 
+//exec time via Java 1300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataContainer{
-		check:
-			(self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
-				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ).println("Blob-cont ") < 0.65
-			
+		check{
+			var fuzziness = (self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
+				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
+ 			if (fuzziness >= prob_PAs){
+				blob_container_map.put(self.getName(), fuzziness.asDouble());
+				return false; 				
+ 			}
+ 			return true;
+		}
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
-		fix {
-			title : "Move its critical operation to a New Component deployed to a New Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move its critical operation to a New Component deployed to the Less Used neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy it to the Less Used Neighbour Node"
-			do{
-				log("--------------");
-				log("pattern Blob");
-				log("moveCompLN on");
-				log("self --> "+self.getName());
-				self.redeployOnNearLessUsedNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix{
-			title : "Move its critial operation to the Less used Component"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
-		fix{
-			title : "Deploy it to New Node"
-			do{
-				log("--------------");
-				log("pattern Blob");
-				log("moveCompNN on");
-				log("self --> "+self.getName());
-				self.deployOnNewNode();
-				log("--------------");
-				log("");
-			}
-		}
-		fix {
-			title: "Reduce Supplier Connects of "+ self.getName()
-			do{
-				log("--------------");
-				log("pattern Blob");
-				log("reduceUsaged on");
-				log("self --> "+self.getName());
-				self.reduceNumberOfSupplierConnects(th_maxSupplierConnects());
-			}
-		}
-		
-		fix {
-			title: "Reduce its Supplier Connects"
-			do {
-				log("--------------");
-				log("pattern Blob");
-				log("reduceProvided on");
-				log("self --> "+self.getName());
-				self.reduceNumberOfSupplierConnects(th_maxSupplierConnects());
-				log("--------------");
-				log("");
-			}
-		}
 	}
 }
 
-
-context Component {
+// exec via Java 1600ms
+context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataController {
-		check:
-			( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
-				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ).println("Blob-ctrl ") < 0.65
-				
+		check{
+			var fuzziness = ( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
+				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
+ 			if (fuzziness >= prob_PAs){
+				blob_controller_map.put(self.getName(), fuzziness.asDouble());
+				return false; 				
+ 			}
+ 			return true;			
+		
+		}
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
-		fix {
-			title : "Move its Critical Operation to a New Component deployed to a New Node"
-			
-			do {
-				self.moveToNewComponentDeployedOnNewNode(); 
-			}
-		}
-		fix{
-			title : "Move its Critical Operation to a New Component deployed to the Less used Neighbour Node"
-			do{
-				self.moveToNewComponentDeployedOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Redeploy its Critical Component to the Less used Neighbour Node"
-			do{
-				self.redeployOnNearLessUsedNode();
-			}
-		}
-		fix{
-			title : "Move its Critical Operation  to the Component with the Lowest Demand"
-			do{
-				self.moveToLessCriticalComponent();
-			}
-		}
-		fix{
-			title : "Deploy its Critical Component to a New Node"
-			do{
-				self.deployOnNewNode();
-			}
-		}
-		fix {
-			title: "Reduce Client Connects of "+ self.getName()
-			do{
-				self.reduceNumberOfClientConnects(th_maxClientConnects());
-			}
-		}
 	}
 }
 
@@ -439,25 +207,24 @@ context Component {
  *	 								Empty Semi Truck										 *
  *							Antipattern Detection and Validation							 *
  *										reviewed											 *
- *********************************************************************************************
+ *********************************************************************************************/
  
-
+// exec via Java 300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique EmptySemiTruck{
- 		check:
- 			(self.F_numRemMsgs_fuzzy() * 
- 				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy())).println("EST ") < 0.65
- 		
+ 		check{
+ 			var fuzziness = (self.F_numRemMsgs_fuzzy() * 
+ 				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy()));
+ 			if (fuzziness >= prob_PAs){
+				blob_controller_map.put(self.getName(), fuzziness.asDouble());
+				return false; 				
+ 			}
+ 			return true;
+ 		}
  		message : "EST <" + self.type.name + "> " + self.name
- 		fix {
-			title : "Apply Session Facade Pattern"
-			do {
-				self.applySessionFacade();
-			}
-		}
  	}
 }
-
 
 /*********************************************************************************************
  *																							 *
@@ -466,7 +233,7 @@ context UML!Component {
  *									reviewed												 *
  *********************************************************************************************
  
- context Component {
+ context UML!Component {
  	critique TowerOfBabel{
  		check{
  			if(self.F_numExF(th_maxExF()) and self.F_maxHwUtil(th_maxHwUtil()))

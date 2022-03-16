@@ -249,7 +249,8 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
  ******************************************************/
  
  
- operation Operation dynamicFixing(artifact : Artifact) {
+ //ADDED By ARCELLI
+/*operation Operation dynamicFixing(artifact : Artifact) {
  
  	var gaAcqSteps = self.getAllOwnMessages(); //all msgs with self as signature
  	var receiveMoses = MessageOccurrenceSpecification.all.select(mos|gaAcqSteps.exists(m|m=mos.message and m.receiveEvent=mos)); //all (receive event) moses with message in msgs
@@ -298,7 +299,7 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
 			}
 		}
  	}
-}
+}*/
  
  
 operation Operation dynamicFixing(component : Component) {
@@ -389,9 +390,11 @@ operation Operation dynamicFixing(component : Component) {
 			//sposto il MOS_r dell'op e il EOS
 			lifeline.getCoveredBys().add(bes.getStart());
 			lifeline.getCoveredBys().add(bes.getFinish());
+			lifeline.getCoveredBys().add(bes);
 		
 			sourceLifeline.removeInteractionFragment(bes.getStart());
 			sourceLifeline.removeInteractionFragment(bes.getFinish());
+			sourceLifeline.removeInteractionFragment(bes);
 		}
 	}
 	if(debug()){
@@ -1389,7 +1392,15 @@ operation Operation getMeanDemand() : Real {
 	return meanDem;
 }
 
-operation UML!Operation test(){
-	for(s in Stereotype.all)
-		s.println();
-}
+operation UML!Operation getMeanUtilization() : Real{
+	var nodes = self.getOwner().getNodes();
+	var meanUtil = 0.0;
+	for(node in nodes){
+		meanUtil = meanUtil + node.getUtilization();
+	}
+	meanUtil = meanUtil / nodes.size();
+	return meanUtil;
+
+} 
+
+

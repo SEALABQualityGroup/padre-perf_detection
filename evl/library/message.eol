@@ -9,6 +9,17 @@ operation Message getReceiveLifeline() : Lifeline{
 	return lifeline;
 }
 
+operation Message getSenderLifeline() : Lifeline{
+	var interaction = self.getOwner(); //interaction
+	var lifeline = interaction.getLifeline(self.getSendEvent());
+	if(lifeline.isUndefined()){
+		showError("Method: getReceiveLifeline() in interaction.eol");
+		return null;
+	}
+	
+	return lifeline;
+}
+
 operation Message isReturn() : Boolean{
 	if( self.getMessageSort().asString().equals("reply") ){
 		
@@ -57,4 +68,10 @@ operation Message getNodesWithNetworkUsageGreaterThan(th_maxNetUtil : Real) : Se
 		}
 	}
 	return returnValue;
+}
+
+operation UML!Message isRemote() : Boolean {
+	var sender_component = self.getSendEvent().getCovereds()->first().getRepresents().getType();
+	var receiver_component = self.getReceiveEvent().getCovereds()->first().getRepresents().getType();
+	return sender_component.isRemote(receiver_component);
 }

@@ -182,7 +182,7 @@ operation Interaction createMessage(from : Lifeline, to : Lifeline, signature : 
 	mes_eos.setExecution(mes_besLf);
 	self.getFragments().add(mes_eos);
 	mes_besLf.start = mes.getSendEvent();
-	mes_besLf.finish = mes_eos;
+	mes_besLf.finish = mes_eos; 
 	to.getCoveredBys().add(mes_eos);
 
 	return mes;
@@ -194,5 +194,19 @@ operation Interaction getInteractionUses() : Sequence(InteractionUse){
 
 }
 
+/*
+ * Returns the execution probability of an interaction by retrieving the root excution probability 
+ * of its Use Case.
+ */
+operation UML!Interaction getExecProb() : Real{
+	
+	if(not self.getUseCase().hasStereotype("GaScenario")){
+		("the UseCase " + self.getUseCase().name + " does not show GaScenrio, a prob = 1 has been considered").println();
+		return 1.asReal();
+	}
+	var rootStep = self.getUseCase().getTag("GaScenario", "root");
+	
+	return rootStep.prob.asReal();
+}
 
 

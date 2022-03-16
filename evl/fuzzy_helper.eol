@@ -1,0 +1,236 @@
+operation calc_messages_bounds () : List(Real){ 
+
+	var msgs = Message.all->select(msg | msg.hasStereotype("GaStep") and msg.hasStereotype("GaStep"));
+	
+	var probs : Sequence(Real);
+	
+	for(msg in MESSAGES){
+		if(msg.getTag("GaStep", "prob").isDefined()){
+			var firstParent = msg.getInteraction().getFragments()->first().getMessage().getTag("GaStep", "prob").asReal();
+			var prob = msg.getTag("GaStep", "prob" ).asReal() * firstParent;
+			probs.add(prob);
+		}
+		else
+			probs.add(1);
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(probs.max());
+	bounds.add(probs.min());
+	
+	return bounds;
+}
+
+operation calc_exec_times_bounds() : List(Real){
+	
+	var msgs = MESSAGES->select(m | m.hasStereotype("GaStep") and m.getTag("GaStep", "execTime")->first().isDefined());
+	
+	var execTimes : Sequence(Real);
+	
+	for(m in msgs){
+		execTimes.add(m.getTag("GaStep", "execTime")->first().asReal());
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(execTimes.max());
+	bounds.add(execTimes.min());
+	
+	return bounds;
+}
+
+operation calc_throughputs_bounds() : List(Real) {
+	var useCases = USECASES->select(uc | uc.getTag("GaScenario", "throughput").notEmpty());
+	
+	var throughputs : Sequence(Real);
+	for(uc in useCases){
+//		if(uc.hasStereotype('GaScenario') and not uc.getTag("GaScenario", "throughput").isEmpty()){
+			throughputs.add(uc.getTag("GaScenario", "throughput")->first().asReal());
+//		}
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(throughputs.max());
+	bounds.add(throughputs.min());
+	
+	return bounds;
+}
+
+operation calc_remote_messages_bounds() : List(Real) {
+		
+	var remMsgs : Sequence(Real);
+	
+	for(lf in LIFELINES){
+		var moses = lf.getCoveredBys()->select(i : InteractionFragment | i.isTypeOf(MessageOccurrenceSpecification));
+		var messages = moses->select(i | i.message.isRemote());
+		remMsgs.add(messages.size());
+	}
+		
+	var bounds : List(Real) = new List(Real);
+	bounds.add(remMsgs.max());
+	bounds.add(remMsgs.min());
+	
+	return bounds;
+}
+
+
+operation calc_net_util_bounds() : List(Real) {
+	var paths = PATHS->select(p | p.getTag("GaCommChannel","utilization")->first().isDefined());
+	
+	if(paths.isEmpty())
+		return null;
+	
+	var utils : Sequence(Real);
+	
+	for(p in paths){
+		utils.add(p.getTag("GaCommChannel","utilization")->first().asReal());
+	}
+
+	var bounds : List(Real) = new List(Real);
+	bounds.add(utils.max());
+	bounds.add(utils.min());
+	
+	return bounds;
+}
+
+operation calc_rem_insts_bounds() {//: List(Real){
+	var numRemComps = 0;	
+	var i = 0;
+	var components_length = COMPONENTS.size();
+	while(i < components_length-1){
+		var j = i + 1; 
+		numRemComps = 0;
+		while(j < components_length){
+			if(COMPONENTS[i].isRemote(COMPONENTS[j])){
+				numRemComps = numRemComps + 1;
+			}			
+			j = j+1;
+		}
+		
+		if(numRemComps > rem_insts_bounds_max){
+			rem_insts_bounds_max = numRemComps;
+		} 
+		if(numRemComps < rem_insts_bounds_min){
+			rem_insts_bounds_min = numRemComps;
+		}
+		
+		i = i +1;
+	}
+	
+}
+
+operation calc_max_hw_util_bounds () : List(Real){
+	
+	var nodes = NODES->select(n | n.getTag("GaExecHost", "utilization")->first().isDefined());
+		
+	var utils : Sequence(Real);
+	
+	for(n in nodes){
+		//if(n.getTag("GaExecHost", "utilization")->first().isDefined() )
+			utils.add(n.getTag("GaExecHost", "utilization")->first().asReal());
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(utils.max());
+	bounds.add(utils.min());
+	
+	return bounds;
+}
+
+
+operation calc_num_supplier_connects_bounds () : List(Real){
+	
+	var upperBound : Real = COMPONENTS->first().getProvideds().size();
+	var lowerBound : Real = COMPONENTS->first().getProvideds().size();
+	
+	//retrieves the upper and lower bounds of the numbero of provided
+	//interface. Basically, it seeks the maximum and minimum number
+	//of interfaces, respectively.
+	for(c in COMPONENTS){
+		var i = c.getProvideds().size();
+		if(i >= upperBound)
+			upperBound = i;
+		else if(i <= lowerBound)
+			lowerBound = i;
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+
+}
+
+
+operation calc_num_client_connects_bounds () : List(Real) {
+	
+	var upperBound : Real = COMPONENTS->first().getProvideds().size();
+	var lowerBound : Real = COMPONENTS->first().getProvideds().size();
+	
+	//retrieves the upper and lower bounds of the numbero of provided
+	//interface. Basically, it seeks the maximum and minimum number
+	//of interfaces, respectively.
+	for(c in COMPONENTS){
+		var i = c.getRequireds().size().asReal();
+		if(i >= upperBound)
+			upperBound = i;
+		else if(i <= lowerBound)
+			lowerBound = i;
+	}
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+	
+}
+
+operation  calc_num_mgs_in_bounds() : List(Real){
+			
+	if(LIFELINES.isEmpty())
+		return 0;
+	
+	var msgs = Message.all;	
+	var first = MESSAGES->select(mes : UML!Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == LIFELINES->first().getRepresents().getType()).size();
+	var upperBound = first;
+	var lowerBound = first;
+	
+	for(l in LIFELINES){
+		var numMsg = MESSAGES->select(mes : Message | mes.getReceiveEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
+		if(numMsg >= upperBound)
+			upperBound = numMsg;
+		else if (numMsg <= lowerBound)
+			lowerBound = numMsg;
+	}
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+}
+
+operation calc_num_mgs_out_bounds() : List(Real){
+	
+	if(LIFELINES.isEmpty())
+		return 0;
+	
+	var first = MESSAGES->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == LIFELINES->first().getRepresents().getType()).size();
+	var upperBound = first;
+	var lowerBound = first;
+	
+	for(l in LIFELINES){
+		var numMsg = MESSAGES->select(mes : Message | mes.getSendEvent().getCovereds()->first().getRepresents().getType() == l.getRepresents().getType()).size();
+		if(numMsg >= upperBound)
+			upperBound = numMsg;
+		else if (numMsg <= lowerBound)
+			lowerBound = numMsg;
+	}	
+	
+	var bounds : List(Real) = new List(Real);
+	bounds.add(upperBound);
+	bounds.add(lowerBound);
+	
+	return bounds;
+}
+

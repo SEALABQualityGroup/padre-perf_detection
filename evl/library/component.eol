@@ -149,7 +149,7 @@ operation Component getAllArtifacts() : Sequence(Artifact){
 	info("Component getAllArtifacts() : Sequence(Artifact)");
 	info("Number of Artifacts of [" + self.name + "] --> [" + Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self)).size() +"]");
 
-	return Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self));
+	return Artifact.allInstances().select(a|a.manifestation.utilizedElement.contains(self)).asSequence();
 }
 
 //recupero tutte le properties relative al componente negli interaction
@@ -294,9 +294,6 @@ operation Component deployOnNewNode() :Boolean {
 
 operation Component deployOn(node : Node){
 	
-	(node.name).println();
-	(self.name).println();
-	
 	var newArtifact : Artifact = new Artifact;
 	var newManifestation; 
 	var newDeployment; 
@@ -308,6 +305,19 @@ operation Component deployOn(node : Node){
 	newManifestation.getClients().add(newArtifact); 
 	newDeployment = node.createDeployment(newArtifact.name); 
 	newDeployment.getDeployedArtifacts().add(newArtifact);
+}
+
+
+operation UML!Component removeDeploymentOn(node : UML!Node){
+	
+	//sequence of deployments on @param node of @param self
+	var deps = Deployment.all->select(d | d.getClients()
+			->select(c | c == node).notEmpty()).flatten
+				->select(dp | dp.getSuppliers().flatten
+					->select(a | a.getManifestations().flatten
+						->select(m | m.getUtilizedElement() == self).notEmpty()).notEmpty());
+						
+	node.getDeployments().removeAll(deps);
 }
 
 operation Component getNeighbours() : List(Node){
@@ -1261,3 +1271,14 @@ operation Component getAverageMaxDiskDemand() : Real{
 		return (avgDemand/operations.size());
 	return avgDemand;
 }
+
+operation UML!Component getMeanUtilization(){
+	var nodes = self.getNodes();
+	var meanUtil = 0.0;
+	for(node in nodes){
+		meanUtil = meanUtil + node.getUtilization();
+	}
+	meanUtil = meanUtil / nodes.size();
+	return meanUtil;
+}
+
