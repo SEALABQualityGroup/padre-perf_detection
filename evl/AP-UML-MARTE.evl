@@ -37,14 +37,6 @@ pre{ // exec time via java 2500ms
 	var COMPONENTS = Component.all;
 	var NODES = Node.all->select(n | n.hasStereotype("GaExecHost") and n.getTag("GaExecHost", "utilization")->first().isDefined());
 	
-	
-	var UTIL_CRITICAL_TH = 0.0;
-	for(n in NODES){
-		UTIL_CRITICAL_TH = UTIL_CRITICAL_TH + n.getUtilization();
-	}
-	UTIL_CRITICAL_TH = UTIL_CRITICAL_TH / NODES.size();
-	//UTIL_CRITICAL_TH.println("CRITICAL HW UTIL THRESHOLD: ");
-	
 	var rem_insts_bounds_max = 0;
 	var rem_insts_bounds_min = 2000;
 	calc_rem_insts_bounds();
@@ -61,8 +53,23 @@ pre{ // exec time via java 2500ms
 	var num_client_connects_bounds = calc_num_client_connects_bounds();
 	var num_mgs_in_bounds = calc_num_mgs_in_bounds();
 	var num_mgs_out_bounds = calc_num_mgs_out_bounds();
-
 	
+	var fuzzy_values : Map (String, Map(String, Real)) = new Map(String, Map(String, Real));
+	var paf_map : Map(String,Real) = new Map();
+	var cps_map : Map(String,Real) = new Map();
+	var ep_map : Map(String,Real) = new Map();
+	var blob_container_map : Map(String,Real) = new Map();
+	var blob_controller_map : Map(String,Real) = new Map();
+	var est_map : Map(String,Real) = new Map();
+}
+
+post{
+	fuzzy_values.put("paf", paf_map);
+	fuzzy_values.put("cps", cps_map);
+	fuzzy_values.put("ep", ep_map);
+	fuzzy_values.put("blob_container", blob_container_map);
+	fuzzy_values.put("blob_controller", blob_controller_map);
+	fuzzy_values.put("est", est_map);
 }
 
 /*********************************************************************************************
@@ -74,12 +81,17 @@ pre{ // exec time via java 2500ms
 
 // exec via Java 600ms 
 context UML!Operation {
-	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique PaF {
-		check:
-			self.getOwner().isTypeOf(Component) and
+		check{ 
+			var fuzziness = (self.F_resDemand_fuzzy() *	(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() ));
+			if (self.getOwner().isTypeOf(Component) and
 			self.F_probExec_fuzzy() <> 0 and 
-			(self.F_resDemand_fuzzy() *	(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() )) < prob_PAs
+			fuzziness >= prob_PAs){
+				paf_map.put(self.getName(), fuzziness);	
+				return false;
+			}
+			return true;
+		} 
 		message : "PaF <Operation> " + self.name
 	}
 }
@@ -101,10 +113,15 @@ context UML!Operation {
  *********************************************************************************************/
  
 context UML!Node {
-	guard: self.getUtilization() > UTIL_CRITICAL_TH
 	critique CPS {
-		check: 
-			( self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy() ) < prob_PAs
+		check{
+			var fuzziness = self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy(); 
+			if(fuzziness >= prob_PAs){
+				cps_map.put(self.getName(), fuzziness);
+				return false;
+			}
+			return true;
+		}
 		message : "CPS <" + self.type.name + "> " + self.name
 	}
 }
@@ -118,12 +135,15 @@ context UML!Node {
 
 // exec via Java 300ms
 context UML!Component {
-	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique ExtensiveProcessingAP{
- 		check:
- 			(self.F_resDemand_fuzzy() * 
- 			( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() ) < prob_PAs
- 					and self.F_probExec_fuzzy() <> 0 )
+ 		check{
+ 			var fuzziness = self.F_resDemand_fuzzy() * ( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() );
+ 			if (fuzziness >= prob_PAs and self.F_probExec_fuzzy() <> 0){
+				ep_map.put(self.getName(), fuzziness);
+				return false; 				
+ 			}
+ 			return true;
+ 		}
  		message : "EP <" + self.type.name + "> " + self.name
  	}
 }
@@ -137,24 +157,33 @@ context UML!Component {
 
 //exec time via Java 1300ms
 context UML!Component {
-	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataContainer{
-		check:
-			(self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
-				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ) < prob_PAs
-			
+		check{
+			var fuzziness = (self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
+				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
+ 			if (fuzziness >= prob_PAs){
+				blob_container_map.put(self.getName(), fuzziness);
+				return false; 				
+ 			}
+ 			return true;
+		}
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
 	}
 }
 
 // exec via Java 1600ms
 context UML!Component {
-	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataController {
-		check:
-			( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
-				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) ) < prob_PAs
-				
+		check{
+			var fuzziness = ( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
+				(self.F_maxHwUtil_fuzzy() + self.F_maxNetUtil_fuzzy()) );
+ 			if (fuzziness >= prob_PAs){
+				blob_controller_map.put(self.getName(), fuzziness);
+				return false; 				
+ 			}
+ 			return true;			
+		
+		}
 		message : "Blob Container <" + self.type.name + "> " + self.getName()
 	}
 }
@@ -169,19 +198,17 @@ context UML!Component {
  
 // exec via Java 300ms
 context UML!Component {
-	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique EmptySemiTruck{
- 		check:
- 			(self.F_numRemMsgs_fuzzy() * 
- 				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy())) < prob_PAs
- 		
+ 		check{
+ 			var fuzziness = (self.F_numRemMsgs_fuzzy() * 
+ 				(self.F_maxNetUtil_fuzzy() + self.F_numRemInst_fuzzy()));
+ 			if (fuzziness >= prob_PAs){
+				blob_controller_map.put(self.getName(), fuzziness);
+				return false; 				
+ 			}
+ 			return true;
+ 		}
  		message : "EST <" + self.type.name + "> " + self.name
-		fix {
-			title : "Apply Session Facade Pattern"
-			do {
-				self.applySessionFacade();
-			}
-		}
  	}
 }
 
