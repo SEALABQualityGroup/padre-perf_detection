@@ -54,6 +54,14 @@ pre{ // exec time via java 2500ms
 	var num_mgs_in_bounds = calc_num_mgs_in_bounds();
 	var num_mgs_out_bounds = calc_num_mgs_out_bounds();
 	
+	var UTIL_CRITICAL_TH = 0.0;
+    for(n in NODES){
+    	UTIL_CRITICAL_TH = UTIL_CRITICAL_TH + n.getUtilization();
+    }
+    UTIL_CRITICAL_TH = UTIL_CRITICAL_TH / NODES.size();
+    //UTIL_CRITICAL_TH.println("CRITICAL HW UTIL THRESHOLD: ");
+	
+	
 	var fuzzy_values : Map (String, Map(String, Real)) = new Map(String, Map(String, Real));
 	var paf_map : Map(String,Real) = new Map();
 	var cps_map : Map(String,Real) = new Map();
@@ -81,6 +89,7 @@ post{
 
 // exec via Java 600ms 
 context UML!Operation {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique PaF {
 		check{ 
 			var fuzziness = (self.F_resDemand_fuzzy() *	(self.F_T_fuzzy() + self.F_maxHwUtil_fuzzy() ));
@@ -113,6 +122,7 @@ context UML!Operation {
  *********************************************************************************************/
  
 context UML!Node {
+	guard: self.getUtilization() > UTIL_CRITICAL_TH
 	critique CPS {
 		check{
 			var fuzziness = self.F_maxQL_fuzzy() * self.F_maxHwUtil_fuzzy(); 
@@ -135,6 +145,7 @@ context UML!Node {
 
 // exec via Java 300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique ExtensiveProcessingAP{
  		check{
  			var fuzziness = self.F_resDemand_fuzzy() * ( self.F_maxHwUtil_fuzzy() + self.F_RT_fuzzy() );
@@ -157,6 +168,7 @@ context UML!Component {
 
 //exec time via Java 1300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataContainer{
 		check{
 			var fuzziness = (self.F_numSupplierConnects_fuzzy() * self.F_numMsgsIn_fuzzy() * 
@@ -173,6 +185,7 @@ context UML!Component {
 
 // exec via Java 1600ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
 	critique Blob_DataController {
 		check{
 			var fuzziness = ( self.F_numClientConnects_fuzzy() * self.F_numMsgsOut_fuzzy() * 
@@ -198,6 +211,7 @@ context UML!Component {
  
 // exec via Java 300ms
 context UML!Component {
+	guard: self.getMeanUtilization() > UTIL_CRITICAL_TH
  	critique EmptySemiTruck{
  		check{
  			var fuzziness = (self.F_numRemMsgs_fuzzy() * 
