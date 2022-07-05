@@ -1,0 +1,40 @@
+/* Change passive resources
+ * 
+ * Supported taggedValue
+ *   queueSize : Integer
+ *   memorySize : NFP_DataSize
+ *   srPoolSize : Integer
+ * 
+ * NB :  If RtUnit::isDynamic is true, the real-time unit do not owns a pool of schedulable resources. 
+ *       Hence, srPoolSize, srPoolPolicy, and SRPoolWaitingPolicy are not applicable
+*/
+
+
+//libraries
+import "../evl/library/artifact.eol";
+import "../evl/library/association.eol";
+//import "library/class.eol";
+import "../evl/library/classifier.eol";
+import "../evl/library/component.eol";
+import "../evl/library/element.eol";
+import "../evl/library/interaction.eol";
+import "../evl/library/interactionFragment.eol";
+import "../evl/library/interactionOperand.eol";
+import "../evl/library/combinedFragment.eol";
+import "../evl/library/interface.eol";
+import "../evl/library/lifeline.eol";
+import "../evl/library/manifestation.eol";
+import "../evl/library/message.eol";
+import "../evl/library/node.eol";
+import "../evl/library/operation.eol";
+import "../evl/library/package.eol";
+//HELPER
+import "../evl/library/HELPER.eol";
+
+
+var target  = UML!Node.all->selectOne(n | n.getName() == targetNodeName);
+
+if(target.isUndefined())
+	throw "[ERROR]: Node" + targetNodeName + "is undefined";
+	
+target.setValue(target.getStereotype("RtUnit"), taggedValue, value);
