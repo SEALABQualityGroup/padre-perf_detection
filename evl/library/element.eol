@@ -108,8 +108,10 @@ operation UML!Element reductionServDemand(percentage : Real){
 }
 
 operation UML!Element getTag(stereotype : String, tag : String) : Any{
-	if(not self.hasStereotype(stereotype))
+	if(not self.hasStereotype(stereotype)){
+		"Stereotype not applied".println(stereotype);
 		return null;
+	}
 	return self.getValue(self.getStereotype(stereotype), tag);
 }
 
