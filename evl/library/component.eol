@@ -1278,7 +1278,8 @@ operation UML!Component getMeanUtilization(){
 	for(node in nodes){
 		meanUtil = meanUtil + node.getUtilization();
 	}
-	meanUtil = meanUtil / nodes.size();
+	if(meanUtil == 0)
+		return 0.0;
 	return meanUtil;
 }
 
