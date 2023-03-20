@@ -25,7 +25,6 @@ var target = Component.all->selectOne(c | c.getName() == targetComponentName);
 if(target.isUndefined())
 	throw "[ERROR]: Node" + targetComponentName + "is undefined";
 	
-var selfOperations = target.getOperations();
 var selfInterfaces = target.getProvideds();
 	
 for (i : Interface in selfInterfaces){
@@ -36,3 +35,5 @@ for (i : Interface in selfInterfaces){
 		}
 	} 
 }
+
+Component.all->remove(target); 
