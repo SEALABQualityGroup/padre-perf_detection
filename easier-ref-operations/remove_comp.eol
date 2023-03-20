@@ -1,0 +1,38 @@
+//Remove a Component
+
+//Libraries
+import "../evl/library/artifact.eol";
+import "../evl/library/association.eol";
+import "../evl/library/classifier.eol";
+import "../evl/library/component.eol";
+import "../evl/library/element.eol";
+import "../evl/library/interaction.eol";
+import "../evl/library/interactionFragment.eol";
+import "../evl/library/interactionOperand.eol";
+import "../evl/library/combinedFragment.eol";
+import "../evl/library/interface.eol";
+import "../evl/library/lifeline.eol";
+import "../evl/library/manifestation.eol";
+import "../evl/library/message.eol";
+import "../evl/library/node.eol";
+import "../evl/library/operation.eol";
+import "../evl/library/package.eol";
+//HELPER
+import "../evl/library/HELPER.eol";
+
+var target = Component.all->selectOne(c | c.getName() == targetComponentName);
+
+if(target.isUndefined())
+	throw "[ERROR]: Node" + targetComponentName + "is undefined";
+	
+var selfOperations = target.getOperations();
+var selfInterfaces = target.getProvideds();
+	
+for (i : Interface in selfInterfaces){
+	var componentsUsingInterface : Sequence(Component) = i.getUsedBy();
+	if(componentsUsingInterface.size() > 0){
+		for (op : Operation in i.getRealizedBy()){
+			componentsUsingInterface.first().moveOperation(op);
+		}
+	} 
+}
