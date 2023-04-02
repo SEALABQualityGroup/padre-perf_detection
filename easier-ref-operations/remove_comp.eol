@@ -24,16 +24,33 @@ var target = Component.all->selectOne(c | c.getName() == targetComponentName);
 
 if(target.isUndefined())
 	throw "[ERROR]: Node" + targetComponentName + "is undefined";
-	
-var selfInterfaces = target.getProvideds();
-	
-for (i : Interface in selfInterfaces){
-	var componentsUsingInterface : Sequence(Component) = i.getUsedBy();
-	if(componentsUsingInterface.size() > 0){
-		for (op : Operation in i.getRealizedBy()){
-			componentsUsingInterface.first().moveOperation(op);
+
+//Given Lifeline move everything in component and remove empty entities 
+for (lf : Lifeline in target.getLifelines()){
+	var messageMap : Map = lf.getIncomingMessages();
+	for(messageInUse: Message in messageMap.values().first() ){
+		var op : Operation = messageInUse.getSignature();
+		// Recupera Component dove muovere OP
+		var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
+		var senderComponent: Component = senderLf.getRepresents().getType();
+		// Sposto OP
+		op.moveIntoComponent(senderComponent);
 		}
-	} 
+	lf.destroy();
+	}
+
+// Clean Dlepoyment diagram
+var nodesToDestroy : Sequence = target.getNodes();
+for(n : Node in nodesToDestroy){
+	for (a: Artifact in n.getArtifact() ){
+		a.destroy();
+	}
+	for (cp in n.getCommunicationPaths()){
+		cp.destroy();
+	}
+	n.destroy();
 }
 
-Component.all->remove(target); 
+// Destroy component
+target.destroy();
+"END".println();
