@@ -82,6 +82,10 @@ operation UML!Element hasStereotype(stereotypeName : String) : Boolean {
 		("the element is undefined").println();
 		showError("Method: hasStereotype() in element.eol");
 	}
+	
+	//true if profiles are not used
+	if(noProfile())
+		return true;
 	return self.getAppliedStereotypes()->exists(s | s.name = stereotypeName);
 }
 

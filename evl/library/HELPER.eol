@@ -250,3 +250,8 @@ operation getHash(element : UML!Element) : String{
 	return ("_" + element.getName().split("_").get(1)).asString();
 }
 
+// Default false
+operation noProfile() : Boolean{
+	return true;
+}
+

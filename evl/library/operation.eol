@@ -304,6 +304,10 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
  
 operation Operation dynamicFixing(component : Component) {
 	var interaction = self.getAllInteractions()->first(); //TODO controllare potrebbe lavorare su un interaction non corretto
+	
+	self.getName().println("^^^^");
+	component.getName().println("$$$");
+	interaction.getName().println("%%%");
 	var sourceLifeline = component.getLifeline(interaction);
 	
 	if(sourceLifeline.isUndefined()){
