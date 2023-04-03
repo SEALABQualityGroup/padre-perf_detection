@@ -20,27 +20,41 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
+//Component to be removed
 var target = Component.all->selectOne(c | c.getName() == targetComponentName);
 
 if(target.isUndefined())
-	throw "[ERROR]: Node" + targetComponentName + "is undefined";
+	throw "[ERROR]: Component " + targetComponentName + " is undefined";
 
 //Given Lifeline move everything in component and remove empty entities 
 for (lf : Lifeline in target.getLifelines()){
 	var messageMap : Map = lf.getIncomingMessages();
-	for(messageInUse: Message in messageMap.values().first() ){
+	var listOfMessages = messageMap.values().first();
+	
+	var seenOperations : Set;
+	
+	for(messageInUse: Message in listOfMessages ){
 		var op : Operation = messageInUse.getSignature();
-		// Recupera Component dove muovere OP
-		var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
-		var senderComponent: Component = senderLf.getRepresents().getType();
-		// Sposto OP
-		op.moveIntoComponent(senderComponent);
-		}
-	lf.destroy();
+		
+		if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
+			seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
+				
+			// Recupera Component dove muovere OP
+			var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
+			var senderComponent: Component = senderLf.getRepresents().getType();
+			// move the operation
+			senderComponent.moveOperation(op);
+			op.dynamicFixing(target);
+		}			
 	}
+	
+	seenOperations.println("@@@@@ ");
+	
+	lf.destroy();
+}
 
 // Clean Dlepoyment diagram
-var nodesToDestroy : Sequence = target.getNodes();
+/*var nodesToDestroy : Sequence = target.getNodes();
 for(n : Node in nodesToDestroy){
 	for (a: Artifact in n.getArtifact() ){
 		a.destroy();
@@ -49,7 +63,7 @@ for(n : Node in nodesToDestroy){
 		cp.destroy();
 	}
 	n.destroy();
-}
+}*/
 
 // Destroy component
 target.destroy();
