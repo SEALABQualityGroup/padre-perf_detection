@@ -320,13 +320,16 @@ operation Operation dynamicFixing(component : Component) {
 		if(debug()){
 			("@@@@@@@@@@@@@ DEBUG dynamic Fixing @@@@@@@@@@@@").println();
 		}
-		
-		var lifeline = interaction.createLifeline(self.getOwner().getName()+"Lifeline"); //L2
-		var spProp = interaction.createOwnedAttribute(self.getOwner().getName(), self.getOwner());
-		
-		lifeline.setRepresents(spProp);
-		lifeline.cloneAppliedStereotypesFrom(sourceLifeline);
-		lifeline.setVisibility(sourceLifeline.getVisibility());
+		var lifeline;	
+		if(self.getOwner().getLifeline(interaction) != null) {
+			lifeline =  self.getOwner().getLifeline(interaction);
+		} else {
+		 	lifeline = interaction.createLifeline(self.getOwner().getName()+"Lifeline"); //L2
+			var spProp = interaction.createOwnedAttribute(self.getOwner().getName(), self.getOwner());
+			lifeline.setRepresents(spProp);
+			lifeline.cloneAppliedStereotypesFrom(sourceLifeline);
+			lifeline.setVisibility(sourceLifeline.getVisibility());
+		}
 		
 		var beses = sourceLifeline.getBESes();
 		
