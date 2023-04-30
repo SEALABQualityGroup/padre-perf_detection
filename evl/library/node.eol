@@ -80,6 +80,28 @@ operation Node cloneLink(listOfLinkedNode : List(Property), packageContainer : P
 	}
 }
 
+//Node new links after move operation
+operation Node addLinksAfterMove(nodesWithNoOp : Sequence(Node), packageContainer : Package){
+	for(nodeNoOperation in nodesWithNoOp){
+		var linkedNodeEnd : Property = new Property;
+		var selfEnd : Property = new Property;
+		var commPath : CommunicationPath = new CommunicationPath;
+		
+		self.ownedAttribute.add(linkedNodeEnd);
+		linkedNodeEnd.name = nodeNoOperation.name;
+		linkedNodeEnd.setType(nodeNoOperation);	
+		
+		nodeNoOperation.ownedAttribute.add(selfEnd);
+		selfEnd.name = self.name;
+		selfEnd.setType(self);
+		
+		packageContainer.addElement(commPath);
+		commPath.name = "A_"+nodeNoOperation.name+"_"+selfEnd.name;
+		commPath.memberEnd.add(linkedNodeEnd);
+		commPath.memberEnd.add(selfEnd);
+	}
+}
+
 /*operation Model createNewNode() : Node{
 	var newNode : Node = new Node; //creo il nuovo nodo
 	var packageContainer : Package = self.getNearestPackage();  //recupero il package container

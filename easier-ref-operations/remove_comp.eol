@@ -47,24 +47,29 @@ for (lf : Lifeline in target.getLifelines()){
 			op.dynamicFixing(target);
 		}			
 	}
-	
-	seenOperations.println("@@@@@ ");
-	
+		
 	lf.destroy();
 }
 
 // Clean Dlepoyment diagram
-/*var nodesToDestroy : Sequence = target.getNodes();
+var nodesToDestroy : Sequence = target.getNodes();
 for(n : Node in nodesToDestroy){
 	for (a: Artifact in n.getArtifact() ){
 		a.destroy();
 	}
 	for (cp in n.getCommunicationPaths()){
+		var memberEnds = cp.getMemberEnds();
+		for(property : Property in memberEnds){
+			if(property.getType == n){
+				property.destroy();
+			}
+		}
 		cp.destroy();
 	}
 	n.destroy();
-}*/
+}
+
 
 // Destroy component
 target.destroy();
-"END".println();
+"Remove Component Done".println();
