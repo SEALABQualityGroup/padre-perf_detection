@@ -407,7 +407,7 @@ operation Operation dynamicFixing(component : Component) {
 	var componentWithOperation = self.getNamespace();
 	var nodeWithOperation = componentWithOperation.getNodes().first();
 	var nodesWithoutOperation : Sequence; 
-	var packageInUse = nodeWithOperation.getNamespace().println();
+	var packageInUse = nodeWithOperation.getNamespace();
 	
 	for(i in  self.getAllOwnMessages() ){
 		var componentWithoutOperation = i.getSendEvent().getCovered().getRepresents().getType();
@@ -415,7 +415,24 @@ operation Operation dynamicFixing(component : Component) {
 			nodesWithoutOperation.add(componentWithoutOperation.getNodes().first());
 		}
 	}
-	nodeWithOperation.addLinksAfterMove(nodesWithoutOperation,packageInUse );
+	
+	/**
+		Possible language bug.
+		Empty sequence with no nodes results as not empty with size 1 
+		
+		Bug presenta con rebook component
+		Bug non si presenta con Order-Other
+		Model train-ticket.
+	*/
+	nodesWithoutOperation.count(Node).println();
+	nodesWithoutOperation.size().println();
+	nodesWithoutOperation.isEmpty().println();
+	nodesWithoutOperation.println();
+	
+	
+	if(	nodesWithoutOperation.count(Node) > 0 ) {
+		nodeWithOperation.addLinksAfterMove(nodesWithoutOperation, packageInUse );
+	}
 	
 	
 	if(debug()){
