@@ -403,22 +403,7 @@ operation Operation dynamicFixing(component : Component) {
 		}
 	}
 	
-	//Deployment view Fixing
-	var componentWithOperation = self.getNamespace();
-	var nodeWithOperation = componentWithOperation.getNodes().first();
-	var nodesWithoutOperation : Sequence; 
-	var packageInUse = nodeWithOperation.getNamespace();
 	
-	for(i in  self.getAllOwnMessages() ){
-		var componentWithoutOperation = i.getSendEvent().getCovered().getRepresents().getType();
-		if( (componentWithoutOperation != componentWithOperation) and (componentWithoutOperation.getNodes().notEmpty())  ){
-			nodesWithoutOperation.add(componentWithoutOperation.getNodes().first());
-		}
-	}
-	
-	if(	nodesWithoutOperation.count(Node) > 0 ) {
-		nodeWithOperation.addLinksAfterMove(nodesWithoutOperation, packageInUse );
-	}
 	
 	
 	if(debug()){
@@ -427,6 +412,37 @@ operation Operation dynamicFixing(component : Component) {
 				i.getMessage().println();
 		}
 		("@@@@@@@@@@@@@ DEBUG dynamic Fixing @@@@@@@@@@@@").println();
+	}
+}
+
+operation Operation dynamicNodeFixing(){
+	//Deployment view Fixing
+	var componentWithOp = self.getNamespace();
+	var nodeWithOp = componentWithOp.getNodes().first();
+	var nodesNoOp : Sequence; 
+	var packageInUse = nodeWithOp.getNamespace();
+	
+	for(i in  self.getAllOwnMessages() ){
+		var componentNoOp = i.getSendEvent().getCovered().getRepresents().getType();
+		if( (componentNoOp != componentWithOp) and (componentNoOp.getNodes().notEmpty())  ){
+			nodesNoOp.add(componentNoOp.getNodes().first());
+		}
+	}
+	
+	if(	nodesNoOp.count(Node) > 0 ) {
+		nodeWithOp.addLinksAfterMove(nodesNoOp, packageInUse );
+	}
+	
+	if(debug()){
+		for(i in  self.getAllOwnMessages()){
+			var componentNoOp = i.getSendEvent().getCovered().getRepresents().getType();
+			if( (componentNoOp != componentWithOp) and (componentNoOp.getNodes().notEmpty())  ){
+				nodesNoOp.add(componentNoOp.getNodes().first());
+			}
+		}
+		
+		nodesNoOperation.println();
+		("@@@@@@@@@@@@@ DEBUG dynamic Node Fixing @@@@@@@@@@@@").println();
 	}
 }
 

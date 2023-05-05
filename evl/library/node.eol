@@ -1027,4 +1027,23 @@ operation UML!Node reuseDeployedArtifactFrom(node : UML!Node){
 	}
 }
 
+operation Node destroyRelatedToNode(){
+	// Clean Deployment diagram
+	for (a: Artifact in self.getArtifact() ){
+		a.destroy();
+	}
+	var propertyToDestroy : Sequence ;
+	for (cp in self.getCommunicationPaths()){
+		var memberEnds = cp.getMemberEnds();
+		for(property : Property in memberEnds){
+			if(property.getType == self){
+				propertyToDestroy.add(property);				
+			}
+		}
+		cp.destroy();
+	}			
+	for(property: Property in propertyToDestroy){
+		property.destroy();
+	}
+}
 

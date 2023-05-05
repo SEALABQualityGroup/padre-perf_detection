@@ -21,20 +21,18 @@ import "../evl/library/package.eol";
 import "../evl/library/HELPER.eol";
 
 //Component to be removed
-var target = Component.all->selectOne(c | c.getName() == targetComponentName);
+var nodeToDestroy = Node.all->selectOne(c | c.getName() == targetNodeName);
 
-if(target.isUndefined())
-	throw "[ERROR]: Component " + targetComponentName + " is undefined";
-
-target.moveAndDestroy();
-
-// Clean Deployment diagram
-var nodesToDestroy : Sequence = target.getNodes();
-for(n : Node in nodesToDestroy){
-	n.destroyRelatedToNode();
-	n.destroy();	
+if(nodeToDestroy.isUndefined())
+	throw "[ERROR]: Component " + targetNodeName + " is undefined";
+	
+var ComponentsRelatedToNode : Sequence = nodeToDestroy.getDeployedComponents();
+for(c : Component in ComponentsRelatedToNode){
+	c.moveAndDestroy();
+	c.destroy();
 }
 
-// Destroy component
-target.destroy();
-"Remove Component Done".println();
+nodeToDestroy.destroyRelatedToNode();
+nodeToDestroy.destroy();
+
+"Remove Node Done".println();
