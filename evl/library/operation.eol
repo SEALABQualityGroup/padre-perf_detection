@@ -411,24 +411,10 @@ operation Operation dynamicFixing(component : Component) {
 	
 	for(i in  self.getAllOwnMessages() ){
 		var componentWithoutOperation = i.getSendEvent().getCovered().getRepresents().getType();
-		if(componentWithoutOperation != componentWithOperation){
+		if( (componentWithoutOperation != componentWithOperation) and (componentWithoutOperation.getNodes().notEmpty())  ){
 			nodesWithoutOperation.add(componentWithoutOperation.getNodes().first());
 		}
 	}
-	
-	/**
-		Possible language bug.
-		Empty sequence with no nodes results as not empty with size 1 
-		
-		Bug presenta con rebook component
-		Bug non si presenta con Order-Other
-		Model train-ticket.
-	*/
-	nodesWithoutOperation.count(Node).println();
-	nodesWithoutOperation.size().println();
-	nodesWithoutOperation.isEmpty().println();
-	nodesWithoutOperation.println();
-	
 	
 	if(	nodesWithoutOperation.count(Node) > 0 ) {
 		nodeWithOperation.addLinksAfterMove(nodesWithoutOperation, packageInUse );

@@ -53,7 +53,7 @@ for (lf : Lifeline in target.getLifelines()){
 				var messageOpOwned : Sequence = op.getAllOwnMessages();
 				for(msgInUse in messageOpOwned){
 					var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
-					if( not(lifelineInUse == senderLf) ){
+					if( lifelineInUse <> senderLf ){
 						if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
 							senderComponent = lifelineInUse.getRepresents().getType();
 							break;
@@ -67,7 +67,7 @@ for (lf : Lifeline in target.getLifelines()){
 					for (lifelineInUse in lifelineSequence){
 						if(lifelineInUse.getRepresents().getType().isKindOf(Component)){
 							var safeComponent : Component =  lifelineInUse.getRepresents().getType();
-							if( not (safeComponent = target) ){
+							if( safeComponent <> target ){
 								senderComponent = safeComponent;
 								break;
 							}
@@ -75,7 +75,7 @@ for (lf : Lifeline in target.getLifelines()){
 					}
 					if (senderComponent.isUndefined()){
 						var safeComponent : Component = Component.all().first();
-						if (not (safeComponent == target)){
+						if (safeComponent <> target){
 							senderComponent = safeComponent;					
 						}
 					}
@@ -88,29 +88,33 @@ for (lf : Lifeline in target.getLifelines()){
 			}
 		}			
 	}
-		
 	lf.destroy();
 }
 
-/*
-// Clean Dlepoyment diagram
+
+// Clean Deployment diagram
 var nodesToDestroy : Sequence = target.getNodes();
 for(n : Node in nodesToDestroy){
 	for (a: Artifact in n.getArtifact() ){
 		a.destroy();
 	}
+	var propertyToDestroy : Sequence ;
 	for (cp in n.getCommunicationPaths()){
 		var memberEnds = cp.getMemberEnds();
 		for(property : Property in memberEnds){
 			if(property.getType == n){
-				property.destroy();
+				propertyToDestroy.add(property);				
 			}
 		}
 		cp.destroy();
+	}			
+	for(property: Property in propertyToDestroy){
+		property.destroy();
 	}
 	n.destroy();
 }
-*/
+
+
 
 // Destroy component
 target.destroy();
