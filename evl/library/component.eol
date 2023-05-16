@@ -1350,3 +1350,70 @@ operation Component moveAndDestroy(){
 		lf.destroy();
 	}
 }
+
+operation Component moveComponentFromNode(){
+	for (lf : Lifeline in self.getLifelines()){
+		var messageMap : Map = lf.getIncomingMessages();
+		var listOfMessages = messageMap.values().first();
+		
+		var seenOperations : Set;
+		
+		for(messageInUse: Message in listOfMessages ){
+			var op : Operation = messageInUse.getSignature();
+			
+			if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
+				seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
+					
+				// Recupera Component dove muovere OP
+				var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
+				var senderComponent: Component;
+				if (senderLf.getRepresents().getType().isKindOf(Component)){
+					 senderComponent = senderLf.getRepresents().getType();
+				}
+				
+				// Se il senderLf è un Attore Controllo prima se op viene utilizzata da altre lifeline,
+				// se non trovo lifeline prendo qualsiasi altro componente (prima controllo interaction , 
+				// se interaction non soddisfacente prendo dalla collezione di componenti generale)
+				if(senderLf.getRepresents().getType().isKindOf(Actor)){
+					var messageOpOwned : Sequence = op.getAllOwnMessages();
+					for(msgInUse in messageOpOwned){
+						var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
+						if( lifelineInUse <> senderLf ){
+							if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
+								senderComponent = lifelineInUse.getRepresents().getType();
+								break;
+							}
+						}
+					}
+					
+					if(senderComponent.isUndefined()){
+						var interactionInUse: Interaction = messageOpOwned.first().getInteraction();
+						var lifelineSequence : Sequence = Lifeline.allInstances->select(lf | lf.namespace == interactionInUse);
+						for (lifelineInUse in lifelineSequence){
+							if(lifelineInUse.getRepresents().getType().isKindOf(Component)){
+								var safeComponent : Component =  lifelineInUse.getRepresents().getType();
+								if( safeComponent <> self ){
+									senderComponent = safeComponent;
+									break;
+								}
+							}
+						}
+						if (senderComponent.isUndefined()){
+							var safeComponent : Component = Component.all().first();
+							if (safeComponent <> self){
+								senderComponent = safeComponent;					
+							}
+						}
+					}
+				}
+				
+				// move the operation
+				if(not senderComponent.isUndefined()){
+					var nodeWhereToMoveComponent : Node = senderComponent.getNodes().first();
+					nodeWhereToMoveComponent.println();
+					
+				}
+			}			
+		}
+	}
+}
