@@ -415,7 +415,7 @@ operation Operation dynamicFixing(component : Component) {
 	}
 }
 
-operation Operation dynamicNodeFixing(){
+operation Operation deploymentFixing(){
 	//Deployment view Fixing
 	var componentWithOp = self.getNamespace();
 	var nodeWithOp = componentWithOp.getNodes().first();
@@ -438,7 +438,7 @@ operation Operation dynamicNodeFixing(){
 		nodeWithOp.println();
 		nodesNoOp.size().println();
 		"".println(nodesNoOp.size() > 0);
-		("@@@@@@@@@@@@@ DEBUG dynamic Node Fixing @@@@@@@@@@@@").println();
+		("@@@@@@@@@@@@@ DEBUG Deployment Fixing @@@@@@@@@@@@").println();
 	}
 }
 

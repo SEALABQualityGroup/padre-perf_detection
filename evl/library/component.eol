@@ -1283,67 +1283,111 @@ operation UML!Component getMeanUtilization(){
 	return meanUtil;
 }
 
+
+// The lifeline represents a Component
+operation Component lifelineRepresentsComponent(lf : Lifeline) : Component {
+		var componentToReturn : Component = lf.getRepresents().getType();
+		return componentToReturn;
+}
+
+// The lifeline represents an Actor so i search if the op is used by other lifelines.
+operation Component lifelineRepresentsActor(lf: Lifeline, op: Operation) : Component{
+
+	var componentToReturn : Component;
+
+	var messageOpOwned : Sequence = op.getAllOwnMessages();
+	for(msgInUse in messageOpOwned){
+		var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
+		if( lifelineInUse <> lf ){
+			if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
+				return componentToReturn = self.lifelineRepresentsComponent(lifelineInUse);
+			}
+		}
+	}
+	
+
+}
+
+// Get componet to move from 
+operation Component getComponentFromInteraction(op: Operation): Component {
+	
+	var componentToReturn : Component;
+	var interactionInUse: Interaction = op.getAllOwnMessages().first().getInteraction();
+	var lifelineSequence : Sequence = Lifeline.allInstances->select(lf | lf.namespace == interactionInUse);
+
+	for (lifelineInUse in lifelineSequence){
+		if(lifelineInUse.getRepresents().getType().isKindOf(Component)){
+			var safeComponent : Component = self.lifelineRepresentsComponent(lifelineInUse);
+			if( safeComponent <> self ){
+				componentToReturn = safeComponent;
+				break;
+			}
+		}
+	}
+	return componentToReturn;
+}
+
+// Component is undefined so I search for random component 
+operation Component getRandomComponent() : Component {
+		var safeComponent : Component = Component.all().first();
+		if (safeComponent <> self){
+			return safeComponent;					
+		}
+	}
+
+
+// Operation that find where to move the operation based on the type the lifeline represents 
+operation Component componentWhereToMove(lf : Lifeline , op : Operation) : Component {
+	
+	var componentToReturn : Component;
+	
+	// If senderLf belongs to a component that component will be the one to be returned
+	if (lf.getRepresents().getType().isKindOf(Component)){
+		componentToReturn = self.lifelineRepresentsComponent(lf);
+	}
+		// If senderLf is an actor I first check if the operation is used by another lifeline
+	if(lf.getRepresents().getType().isKindOf(Actor)){
+		componentToReturn = self.lifelineRepresentsActor(lf,op);
+	}
+	
+	//NOTE THE FOLLOWING TWO IF ARE SIMILAR BUT TOTALLY DIFFENT
+	//If component is still undefined I choose components from same interactions
+	if(componentToReturn.isUndefined() ){
+		componentToReturn = self.getComponentFromInteraction(op);
+	}
+	
+	// If component is still undefined I choose whatever component I find first 
+	if (componentToReturn.isUndefined()){
+		componentToReturn = self.getRandomComponent();
+	}
+	
+	return componentToReturn;
+}
+
+//Move op to Component and do Dynamic fixing for deployment and dynamic
+operation Component moveAndFullFix(op : Operation){
+		self.moveOperation(op);
+		op.dynamicFixing(self);
+		op.deploymentFixing();
+}
+
+// This operation given lifeline of a component moves everything in another component and then destroys the lifeline
 operation Component moveAndDestroy(){
-	//Given Lifeline move everything in component and remove empty entities 
 	for (lf : Lifeline in self.getLifelines()){
-		var messageMap : Map = lf.getIncomingMessages();
-		var listOfMessages = messageMap.values().first();
-		
+		var listOfMessages = lf.getIncomingMessages().values().first();		
 		var seenOperations : Set;
-		
+				
 		for(messageInUse: Message in listOfMessages ){
-			var op : Operation = messageInUse.getSignature();
-			
+			var op : Operation = messageInUse.getSignature();		
 			if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
 				seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
-					
 				// Recupera Component dove muovere OP
 				var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
-				var senderComponent: Component;
-				if (senderLf.getRepresents().getType().isKindOf(Component)){
-					 senderComponent = senderLf.getRepresents().getType();
-				}
-				
-				// Se il senderLf è un Attore Controllo prima se op viene utilizzata da altre lifeline,
-				// se non trovo lifeline prendo qualsiasi altro componente (prima controllo interaction , 
-				// se interaction non soddisfacente prendo dalla collezione di componenti generale)
-				if(senderLf.getRepresents().getType().isKindOf(Actor)){
-					var messageOpOwned : Sequence = op.getAllOwnMessages();
-					for(msgInUse in messageOpOwned){
-						var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
-						if( lifelineInUse <> senderLf ){
-							if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
-								senderComponent = lifelineInUse.getRepresents().getType();
-								break;
-							}
-						}
-					}
-					
-					if(senderComponent.isUndefined()){
-						var interactionInUse: Interaction = messageOpOwned.first().getInteraction();
-						var lifelineSequence : Sequence = Lifeline.allInstances->select(lf | lf.namespace == interactionInUse);
-						for (lifelineInUse in lifelineSequence){
-							if(lifelineInUse.getRepresents().getType().isKindOf(Component)){
-								var safeComponent : Component =  lifelineInUse.getRepresents().getType();
-								if( safeComponent <> self ){
-									senderComponent = safeComponent;
-									break;
-								}
-							}
-						}
-						if (senderComponent.isUndefined()){
-							var safeComponent : Component = Component.all().first();
-							if (safeComponent <> self){
-								senderComponent = safeComponent;					
-							}
-						}
-					}
-				}
+				var senderComponent: Component = self.componentWhereToMove(senderLf, op);
+
 				// move the operation
 				if(not senderComponent.isUndefined()){
-					senderComponent.moveOperation(op);
-					op.dynamicFixing(self);
-					op.dynamicNodeFixing();
+					senderComponent.moveAndFullFix(op);
 				}
 			}			
 		}
@@ -1351,67 +1395,29 @@ operation Component moveAndDestroy(){
 	}
 }
 
+
+//This operation moves the component related to the node to a new node.
 operation Component moveComponentFromNode(){
-	for (lf : Lifeline in self.getLifelines()){
-		var messageMap : Map = lf.getIncomingMessages();
-		var listOfMessages = messageMap.values().first();
-		
+
+	var personalNode : Node = self.getNodes().first(); 
+	
+	for (lf : Lifeline in self.getLifelines()){	
+		var listOfMessages = lf.getIncomingMessages().values().first();
 		var seenOperations : Set;
-		
 		for(messageInUse: Message in listOfMessages ){
 			var op : Operation = messageInUse.getSignature();
-			
 			if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
 				seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
 					
 				// Recupera Component dove muovere OP
 				var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
-				var senderComponent: Component;
-				if (senderLf.getRepresents().getType().isKindOf(Component)){
-					 senderComponent = senderLf.getRepresents().getType();
-				}
-				
-				// Se il senderLf è un Attore Controllo prima se op viene utilizzata da altre lifeline,
-				// se non trovo lifeline prendo qualsiasi altro componente (prima controllo interaction , 
-				// se interaction non soddisfacente prendo dalla collezione di componenti generale)
-				if(senderLf.getRepresents().getType().isKindOf(Actor)){
-					var messageOpOwned : Sequence = op.getAllOwnMessages();
-					for(msgInUse in messageOpOwned){
-						var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
-						if( lifelineInUse <> senderLf ){
-							if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
-								senderComponent = lifelineInUse.getRepresents().getType();
-								break;
-							}
-						}
-					}
-					
-					if(senderComponent.isUndefined()){
-						var interactionInUse: Interaction = messageOpOwned.first().getInteraction();
-						var lifelineSequence : Sequence = Lifeline.allInstances->select(lf | lf.namespace == interactionInUse);
-						for (lifelineInUse in lifelineSequence){
-							if(lifelineInUse.getRepresents().getType().isKindOf(Component)){
-								var safeComponent : Component =  lifelineInUse.getRepresents().getType();
-								if( safeComponent <> self ){
-									senderComponent = safeComponent;
-									break;
-								}
-							}
-						}
-						if (senderComponent.isUndefined()){
-							var safeComponent : Component = Component.all().first();
-							if (safeComponent <> self){
-								senderComponent = safeComponent;					
-							}
-						}
-					}
-				}
-				
+				var senderComponent: Component = self.componentWhereToMove(senderLf, op);
+								
 				// move the operation
 				if(not senderComponent.isUndefined()){
 					var nodeWhereToMoveComponent : Node = senderComponent.getNodes().first();
 					nodeWhereToMoveComponent.println();
-					
+					personalNode.moveRelatedToNode(nodeWhereToMoveComponent);
 				}
 			}			
 		}
