@@ -1314,7 +1314,7 @@ operation Component componentWhereToMove(lf : Lifeline , op : Operation) : Compo
 	
 	// If senderLf belongs to a component that component will be the one to be returned
 	if (lf.getRepresents().getType().isKindOf(Component)){
-		componentToReturn = lifelineInUse.getRepresents().getType();
+		componentToReturn = lf.getRepresents().getType();
 	}
 		// If senderLf is an actor I first check if the operation is used by another lifeline
 	if(lf.getRepresents().getType().isKindOf(Actor)){
@@ -1382,10 +1382,12 @@ operation Component moveComponentFromNode(){
 				var senderComponent: Component = self.componentWhereToMove(senderLf, op);
 								
 				// move the operation
-				if(not senderComponent.isUndefined()){
+				if(not senderComponent.isUndefined()){				
 					var nodeWhereToMoveComponent : Node = senderComponent.getNodes().first();
-					nodeWhereToMoveComponent.println();
 					personalNode.moveRelatedToNode(nodeWhereToMoveComponent);
+					op.deploymentFixing();
+
+					
 				}
 			}			
 		}

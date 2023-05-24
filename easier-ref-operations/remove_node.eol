@@ -29,8 +29,11 @@ if(target.isUndefined())
 var ComponentsRelatedToNode : Sequence = target.getDeployedComponents();
 for(c : Component in ComponentsRelatedToNode){
 	c.moveComponentFromNode();
-	//c.destroy();
 }
+					"QUI1".println();
+target.destroyRelatedToNode();
+target.destroy;
 
+					"QUI2".println();
 
 "Remove Node Done".println();

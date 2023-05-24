@@ -40,6 +40,7 @@ operation Node cloneDeployedArtifactFrom(node : Node, component : Component){
 }
 
 
+
 operation Node cloneDeployedArtifactFrom(node : Node, classfier : Classifier){
 	for(dep in node.getDeployedElements()){
 		
@@ -1045,6 +1046,7 @@ operation Node destroyRelatedToNode(){
 	for (a: Artifact in self.getArtifact() ){
 		a.destroy();
 	}
+	
 	var propertyToDestroy : Sequence ;
 	for (cp in self.getCommunicationPaths()){
 		var memberEnds = cp.getMemberEnds();
@@ -1060,7 +1062,22 @@ operation Node destroyRelatedToNode(){
 	}
 }
 
-operation Node moveRelatedToNode(nodeToDestination : UML!Node){
-	var node : Node = nodeToDestination;
-
+operation Node moveRelatedToNode(nodeWhereToMoveComponent : Node){
+	
+	for(a : Artifact in self.getArtifact()){
+		var component : Component = a.getManifestations().first().getUtilizedElement();
+		
+		var newArtifact : Artifact = new Artifact;
+		var newManifestation;	
+		var newDeployment;
+		
+		nodeWhereToMoveComponent.getNearestPackage().addElement(newArtifact);
+		newArtifact.name = a.name;
+		
+		newManifestation = newArtifact.createManifestation(component.name, component); 
+		newDeployment = nodeWhereToMoveComponent.createDeployment(newArtifact.name);
+		newDeployment.getDeployedArtifacts().add(newArtifact);
+		a.destroy();
+	}
 }
+
