@@ -135,3 +135,16 @@ operation Lifeline getNextOutgoingMessage(mes : Message) : Message{
 operation Lifeline getBESes() : Sequence(BehaviorExecutionSpecification){
 	return self.getCoveredBys()->select(cov | cov.isTypeOf(BehaviorExecutionSpecification)).asSequence();
 }
+
+// The lifeline represents an Actor so i search if the op is used by other lifelines.
+operation Lifeline lifelineRepresentsActor(op: Operation) : Component{
+	var messageOpOwned : Sequence = op.getAllOwnMessages();
+	for(msgInUse in messageOpOwned){
+		var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
+		if( lifelineInUse <> self ){
+			if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
+				return lf.getRepresents().getType();
+			}
+		}
+	}
+}

@@ -1062,8 +1062,5 @@ operation Node destroyRelatedToNode(){
 
 operation Node moveRelatedToNode(nodeToDestination : UML!Node){
 	var node : Node = nodeToDestination;
-	for(deployment in self.deployment){
-			"".println(node);
-			deployment.setClient(nodeToDestionation);
-	}
+
 }
