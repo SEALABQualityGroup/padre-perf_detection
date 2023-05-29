@@ -1303,6 +1303,9 @@ operation Component getRandomComponent() : Component {
 		var safeComponent : Component = Component.all().first();
 		if (safeComponent <> self){
 			return safeComponent;					
+		}else{
+			safeComponent = Component.all().second();
+			return safeComponent;
 		}
 	}
 
@@ -1353,13 +1356,19 @@ operation Component moveAndDestroy(){
 
 				// move the operation
 				if(not senderComponent.isUndefined()){
-					self.moveOperation(op);
-					op.dynamicFixing(self);
+					senderComponent.moveOperation(op);
+					op.dynamicFixing(senderComponent);
 					op.deploymentFixing();
 				}
 			}			
 		}
 		lf.destroy();
+	}
+	
+	// operation without message moved randomly
+	for(op : Operation in self.getOperations()){
+		var randomComponent : Component = self.getRandomComponent();
+		randomComponent.moveOperation(op);
 	}
 }
 
@@ -1392,4 +1401,6 @@ operation Component moveComponentFromNode(){
 			}			
 		}
 	}
+	
+
 }
