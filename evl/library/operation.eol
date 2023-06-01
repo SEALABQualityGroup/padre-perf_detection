@@ -420,19 +420,16 @@ operation Operation deploymentFixing(){
 	var componentWithOp = self.getNamespace();
 	var nodeWithOp = componentWithOp.getNodes().first();
 	var nodesNoOp : Sequence; 
-	var packageInUse = nodeWithOp.getNamespace();
-	
+	var packageInUse = nodeWithOp.getNamespace();	
 	for(i in  self.getAllOwnMessages() ){
 		var componentNoOp = i.getSendEvent().getCovered().getRepresents().getType();
-		if( (componentNoOp <> componentWithOp) and (componentNoOp.getNodes().notEmpty())  ){
+		if((componentNoOp <> componentWithOp) and (componentNoOp.getNodes().notEmpty())  ){
 			nodesNoOp.add(componentNoOp.getNodes().first());
 		}
 	}
-	
-	if(	nodesNoOp.size > 0 ) {
+	if(	nodesNoOp.size > 0) {
 		nodeWithOp.addLinksAfterMove(nodesNoOp, packageInUse );
 	}
-	
 	if(debug()){		
 		nodesNoOp.println();
 		nodeWithOp.println();

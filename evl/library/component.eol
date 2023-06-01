@@ -1350,14 +1350,14 @@ operation Component moveAndDestroy(){
 			if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
 				seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
 				
+							
 				// Recupera Component dove muovere OP
 				var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
 				var senderComponent: Component = self.componentWhereToMove(senderLf, op);
-
 				// move the operation
 				if(not senderComponent.isUndefined()){
-					senderComponent.moveOperation(op);
-					op.dynamicFixing(senderComponent);
+					senderComponent.moveOperation(op);					
+					op.dynamicFixing(self);
 					op.deploymentFixing();
 				}
 			}			

@@ -24,7 +24,7 @@ import "../evl/library/HELPER.eol";
 var nodeToDestroy = Node.all->selectOne(c | c.getName() == targetNodeName);
 
 if(nodeToDestroy.isUndefined())
-	throw "[ERROR]: Component " + targetNodeName + " is undefined";
+	throw "[ERROR]: Node " + targetNodeName + " is undefined";
 	
 var ComponentsRelatedToNode : Sequence = nodeToDestroy.getDeployedComponents();
 for(c : Component in ComponentsRelatedToNode){

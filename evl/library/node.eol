@@ -81,24 +81,24 @@ operation Node cloneLink(listOfLinkedNode : List(Property), packageContainer : P
 	}
 }
 
-//Node new links after move operation
+//Node new links after move operation if they not alredy exists
 operation Node addLinksAfterMove(nodesWithNoOp : Sequence(Node), packageContainer : Package){
-	var flag : Boolean = false;
+	
+	var communicationPathAlredyExist : Boolean = false;
 	var i : Integer = 0;
 	for(nodeNoOperation in nodesWithNoOp){
-		flag = false;
-		
+		communicationPathAlredyExist = false;
 		for(property: Property in self.getOwnedAttributes()){
 			if ( property.getType() == nodeNoOperation ){
-				flag = true;
+				communicationPathAlredyExist = true;
 				break;
 			}
 		}
 	
-		if(not flag){
+		if(not communicationPathAlredyExist){
 			var linkedNodeEnd : Property = new Property;
 			var selfEnd : Property = new Property;
-			var commPath : CommunicationPath = new CommunicationPath;
+			var newCommPath : CommunicationPath = new CommunicationPath;
 			
 			self.ownedAttribute.add(linkedNodeEnd);
 			linkedNodeEnd.name = nodeNoOperation.name;
@@ -108,13 +108,38 @@ operation Node addLinksAfterMove(nodesWithNoOp : Sequence(Node), packageContaine
 			selfEnd.name = self.name;
 			selfEnd.setType(self);
 			
-			packageContainer.addElement(commPath);
-			commPath.name = "A_"+nodeNoOperation.name+"_"+selfEnd.name;
-			commPath.memberEnd.add(linkedNodeEnd);
-			commPath.memberEnd.add(selfEnd);
+			
+			packageContainer.addElement(newCommPath);
+			newCommPath.memberEnd.add(linkedNodeEnd);
+			newCommPath.memberEnd.add(selfEnd);
+			newCommPath.memberEnd.println("Created Communication Path ");
+			
+			if(not noProfile()){
+					var stereotype = Stereotype.all()->selectOne(c | c.getName = "DaConnector");
+					newCommPath.applyStereotype(stereotype);		
+					
+					for(communicationPath : CommunicationPath in CommunicationPath.all()){
+						if(communicationPath.hasStereotype("DaConnector") and communicationPath <> newCommPath){
+							var daFailureTag = communicationPath.getTag("DaConnector", "failure")->first();
+							daFailureTag.type.println();
+							var daFailureType = daFailureTag.type;
+							//it invokes the EcoreUtil, shall it work within a standalone java invocation?
+							var emfTool : new Native("org.eclipse.epsilon.emc.emf.tools.EmfTool");
+							//creates a new instance of @param
+							var daFailure = emfTool.getECoreUtil().create(daFailureType);
+							//it is dummy value. it must be set wrt to the component/operation
+							daFailure.occurrenceProb.add("0.56"); // CHANGE 
+							var failureTag = newCommPath.getTag("DaConnector", "failure");
+							failureTag.add(daFailure);	
+							break;						
+						}
+					}
+				}
+			}			
+
 		}
 	}	
-}
+
 
 /*operation Model createNewNode() : Node{
 	var newNode : Node = new Node; //creo il nuovo nodo

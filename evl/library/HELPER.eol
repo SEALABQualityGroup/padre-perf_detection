@@ -252,6 +252,6 @@ operation getHash(element : UML!Element) : String{
 
 // Default false
 operation noProfile() : Boolean{
-	return true;
+	return false;
 }
 

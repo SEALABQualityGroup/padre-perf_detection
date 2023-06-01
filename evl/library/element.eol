@@ -26,6 +26,7 @@ operation UML!Element cloneAppliedStereotypesFrom(element : UML!Element) {
 					var failureTag = self.getTag("DaComponent", "failure");
 					failureTag.add(daFailure);
 				}
+			
 			}
 				
 			if(stereotype.name <> "RtUnit" and stereotype.name <> "GaExecHost" and stereotype.name <> "DaComponent"){
