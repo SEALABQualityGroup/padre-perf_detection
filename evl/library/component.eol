@@ -1377,27 +1377,31 @@ operation Component moveAndDestroy(){
 operation Component moveComponentFromNode(){
 
 	var personalNode : Node = self.getNodes().first(); 
-	
+	var componentMoved: boolean = false;
 	for (lf : Lifeline in self.getLifelines()){	
+		if(componentMoved){break;}
 		var listOfMessages = lf.getIncomingMessages().values().first();
 		var seenOperations : Set;
 		for(messageInUse: Message in listOfMessages ){
+			if(componentMoved){break;}
 			var op : Operation = messageInUse.getSignature();
 			if(not seenOperations.includes(messageInUse.getInteraction().getName()+"_"+op.getName())){
 				seenOperations.add(messageInUse.getInteraction().getName()+"_"+op.getName());
 					
 				// Recupera Component dove muovere OP
 				var senderLf : Lifeline = messageInUse.getSendEvent().getCovered();
-				var senderComponent: Component = self.componentWhereToMove(senderLf, op);
-								
-				// move the operation
-				if(not senderComponent.isUndefined()){				
-					var nodeWhereToMoveComponent : Node = senderComponent.getNodes().first();
-					personalNode.moveRelatedToNode(nodeWhereToMoveComponent);
-					op.deploymentFixing();
-
-					
-				}
+				if(senderLf <> lf){
+					var senderComponent: Component = self.componentWhereToMove(senderLf, op);
+					// move the operation
+					if(not senderComponent.isUndefined()){				
+						var nodeWhereToMoveComponent : Node = senderComponent.getNodes().first();
+						if(nodeWhereToMoveComponent <> personalNode){
+							personalNode.moveRelatedToNode(nodeWhereToMoveComponent);
+							op.deploymentFixing();
+							componentMoved = true;
+						}
+					}
+				}					
 			}			
 		}
 	}
