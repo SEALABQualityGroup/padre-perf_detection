@@ -20,17 +20,28 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-//Component to be removed
+//Node to be removed
 var target = Node.all->selectOne(c | c.getName() == targetNodeName);
 
 if(target.isUndefined())
-	throw "[ERROR]: Node " + targetNodeName + " is undefined";
+	throw "[ERROR]: Node " + targetNodeName + " is undefined.";
+	
+
+// all nodes excluding the target node
+var availableNodes = Node.allInstances->select(n | n.getName() <> targetNodeName);
 
 var ComponentsRelatedToNode : Sequence = target.getDeployedComponents();
-for(c : Component in ComponentsRelatedToNode){
-	c.moveComponentFromNode();
+for(c : UML!Component in ComponentsRelatedToNode){
+
+	// randomly extract the destination node
+	var recipientNode = availableNodes.random();
+	c.redeployOn(recipientNode, target);
+
+	//c.moveComponentFromNode(target);
 }
+
 target.destroyRelatedToNode();
+
 target.destroy;
 
-"Remove Node Done".println();
+//"Remove Node Done".println();

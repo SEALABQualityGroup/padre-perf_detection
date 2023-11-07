@@ -24,17 +24,22 @@ import "../evl/library/HELPER.eol";
 var target = Component.all->selectOne(c | c.getName() == targetComponentName);
 
 if(target.isUndefined())
-	throw "[ERROR]: Component " + targetComponentName + " is undefined";
+	throw "Component: " + targetComponentName + " is undefined";
 
 target.moveAndDestroy();
 
-// Clean Deployment diagram
+for(a : UML!Artifact in target.getAllArtifacts()){
+	a.destroy();
+}
+
+/* Clean Deployment diagram
 var nodesToDestroy : Sequence = target.getNodes();
 for(n : Node in nodesToDestroy){
+	n.getName().println("Node to be removed -> ");
 	n.destroyRelatedToNode();
 	n.destroy();	
-}
+}*/
 
 // Destroy component
 target.destroy();
-"Remove Component Done".println();
+//"Remove Component Done".println();

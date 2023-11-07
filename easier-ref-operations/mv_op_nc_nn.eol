@@ -39,6 +39,7 @@ Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 var sourceComponent : Component = selfOperation.getOwner();
 		
 newComponent.cloneAppliedStereotypesFrom(sourceComponent); //clono gli stessi stereotipi del componente sorgente	
+
 newComponent.moveInterfacesRealizationFrom(sourceComponent, selfOperation);
 	
 var listOfUsedProvidedInterfaces : List(Interface) = sourceComponent.getAllUsedIntefacesRequiredsBy(selfOperation);
@@ -51,7 +52,7 @@ if(sourceComponent.getNodes().isEmpty()){
 }
 
 newNode.clone(sourceComponent.getNodes()->first()); //shall resolve the missed stereotypes
-	
+
 newComponent.moveOperation(selfOperation); //sposta l'operazione sul componente appena creato
 	
 //dynamic

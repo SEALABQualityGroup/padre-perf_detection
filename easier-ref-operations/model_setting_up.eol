@@ -1,0 +1,137 @@
+
+var GRM_RESOURCE_STEROTYPE = "Resource";
+
+var stereotypeNames = new List();
+stereotypeNames.add("ResourceUsage");
+stereotypeNames.add("RtUnit");
+stereotypeNames.add("HwComponent");
+stereotypeNames.add("GaExecHost"); 
+
+var nodes = UML!Node.allInstances();
+applyStereotypeOn(nodes, stereotypeNames);
+
+stereotypeNames.clear();
+stereotypeNames.add("DaConnector");
+applyStereotypeOn(UML!CommunicationPath.allInstances(), stereotypeNames);
+
+stereotypeNames.clear();
+stereotypeNames.add("DaComponent");
+applyStereotypeOn(UML!Component.allInstances(), stereotypeNames);
+
+stereotypeNames.clear();
+stereotypeNames.add("GaScenario");
+applyStereotypeOn(UML!UseCase.allInstances(), stereotypeNames);
+
+stereotypeNames.clear();
+stereotypeNames.add("GaStep");
+applyStereotypeOn(UML!Message.allInstances()->select(m | m.getMessageSort().asString() <> "reply"), stereotypeNames);
+
+stereotypeNames.clear();
+stereotypeNames.add("GaWorkloadEvent");
+var actor_lifeline = UML!Lifeline.allInstances()->select(lf | lf.getRepresents().getType().isTypeOf(UML!Actor));
+applyStereotypeOn(actor_lifeline, stereotypeNames);
+
+
+setNodeType(nodes);
+setMessageValue(UML!Message.allInstances()->select(m | m.getMessageSort().asString() <> "reply"));
+setProbOfFailure(UML!Component.allInstances(), "DaComponent");
+setProbOfFailure(UML!CommunicationPath.allInstances(), "DaConnector");
+
+
+/**
+ * Given the list of elements applies each stereotype within the stereotypeNames
+ * 	
+ */
+operation applyStereotypeOn(elements : List, stereotypeNames : List){
+	var listApplicableStereotypes = elements->first().getApplicableStereotypes();
+	for(ele in elements){
+		for(applicableSt in listApplicableStereotypes){
+			for(stName in stereotypeNames){
+				if(applicableSt.name == stName and not ele.isStereotypeApplied(applicableSt)){	
+					var s = ele.getApplicableStereotype(applicableSt.qualifiedName);
+					ele.applyStereotype(s);				
+				}
+			}
+		}
+	}
+}
+
+/**
+ * Set the type of a node following the one specified in listOfNodeTypes	
+ *
+ */
+operation setNodeType(nodes : List){
+	
+	// Use the node types specified at 
+	// https://raw.githubusercontent.com/danieledipompeo/easier/devUML/easier-core/config.ini
+	var listOfNodeTypes = new List();
+	listOfNodeTypes.add(new Tuple(label = "basic-and-budget-friendly", performance = 1, energy = 5, cost = 5));
+	listOfNodeTypes.add(new Tuple(label = "energy-efficient-low-cost", performance = 3, energy = 5, cost = 5));
+	listOfNodeTypes.add(new Tuple(label = "cost-effective-general-purpose", performance = 3, energy = 3, cost = 5));
+	listOfNodeTypes.add(new Tuple(label = "balanced-performance-and-efficiency", performance = 5, energy = 3, cost = 3));
+	listOfNodeTypes.add(new Tuple(label = "high-performance-powerhouse", performance = 5, energy = 4, cost = 4));
+	
+	for(n in nodes){
+		var type = listOfNodeTypes.random();
+		
+		n.name = n.name + "_" + type.label; 
+		var reourceUsageStereotype = n.getAppliedStereotype("MARTE::MARTE_Foundations::GRM::ResourceUsage");
+		n.getValue(reourceUsageStereotype, "energy").clear();
+		n.getValue(reourceUsageStereotype, "energy").add(type.energy.asString());
+		
+		var hwComponentStereotype = n.getAppliedStereotype("MARTE::MARTE_DesignModel::HRM::HwPhysical::HwLayout::HwComponent");
+		n.setValue(hwComponentStereotype, "price", type.cost.asString());
+		
+		var gaExecHostStereotype = n.getAppliedStereotype("MARTE::MARTE_AnalysisModel::GQAM::GaExecHost");
+		n.setValue(gaExecHostStereotype, "speedFactor", type.performance.asString());
+		
+	}
+}
+
+
+operation setMessageValue(messages : List){
+
+	var msgSizes = new List(); 
+	msgSizes.add(new Tuple(label = "Large-Text",  payload = "1",  eTime = "10"));
+	msgSizes.add(new Tuple(label = "Small-Audio", payload = "3",  eTime = "30"));
+	msgSizes.add(new Tuple(label = "Medium-Audio",payload = "7.5",eTime = "75"));
+	msgSizes.add(new Tuple(label = "Large-Image", payload = "10", eTime = "150"));
+	msgSizes.add(new Tuple(label = "Large-Audio", payload = "30", eTime = "300"));
+	msgSizes.add(new Tuple(label = "Medium-Video",payload = "125",eTime = "1250"));
+	msgSizes.add(new Tuple(label = "Large-Video", payload = "200",eTime = "2000"));
+	
+	for(msg in messages){
+	
+		var gaStepStereotype = msg.getAppliedStereotype("MARTE::MARTE_AnalysisModel::GQAM::GaStep");
+		
+		var msgType = msgSizes.random();
+		
+		msg.getValue(gaStepStereotype, "msgSize").clear();
+		msg.getValue(gaStepStereotype, "msgSize").add(msgType.payload);
+		msg.getValue(gaStepStereotype, "hostDemand").clear();
+		msg.getValue(gaStepStereotype, "hostDemand").add(msgType.eTime);
+	}
+}
+
+operation setProbOfFailure(elements : List, st : String){
+
+	var probOfFailures = new List();
+	
+	probOfFailures.add(new Tuple(label = "Unreliable", probOfFailure = "0.77"));
+	probOfFailures.add(new Tuple(label = "Potentially-Unreliable", probOfFailure = "0.85"));
+	probOfFailures.add(new Tuple(label = "Reliable", probOfFailure = "0.9"));
+	probOfFailures.add(new Tuple(label = "Highly-Reliable", probOfFailure = "0.99"));
+	
+	for(e in elements){
+		var stereotype = e.getAppliedStereotype("DAM::DAM_UML_Extensions::System::Core::" + st);
+		var daFailureTag = e.getValue(stereotype, "failure")->first();
+		
+		var failureProb = probOfFailures.random().probOfFailure;
+		e.getValue(stereotype, "failure")->first().occurrenceProb.clear();
+		e.getValue(stereotype, "failure")->first().occurrenceProb.add(failureProb);
+			
+//		var stereotype = e.getAppliedStereotype("DAM::DAM_UML_Extensions::System::Core::" + st);
+//		->first().
+	}
+
+}

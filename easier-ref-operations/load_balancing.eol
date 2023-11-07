@@ -20,7 +20,7 @@ import "../evl/library/package.eol";
 //HELPER
 import "../evl/library/HELPER.eol";
 
-//Component to be removed
+//Node to be removed
 var nodeToDestroy = Node.all->selectOne(c | c.getName() == targetNodeName);
 
 if(nodeToDestroy.isUndefined())

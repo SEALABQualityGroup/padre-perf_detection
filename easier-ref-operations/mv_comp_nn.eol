@@ -27,11 +27,18 @@ newNode.setName(newNodeName);
 UML!Node.all->first().getNearestPackage().getPackagedElements().add(newNode);
 var selfComponent = Component.all->selectOne(c | c.getName() == targetComponentName);
 
-//("move component --> " + selfComponent.getName() + " to --> " + newNode.getName() ).println();
+var speedFactor = speed;
+var energyFactor = energy;
+var costFactor = cost;
 
 //clones applied stereotypes and communication paths
 var selfNode = selfComponent.getNodes()->first(); 
-newNode.clone(selfNode); 
+newNode.clone(selfNode);
+
+newNode.setValue(newNode.getStereotype("GaExecHost"), "speedFactor", speedFactor.asString());
+newNode.getTag("ResourceUsage", "energy")->removeAt(0);
+newNode.getTag("ResourceUsage", "energy").add(energyFactor.asString());
+newNode.setValue(newNode.getStereotype("HwComponent"), "price", costFactor.asString());
 
 selfComponent.redeployOn(newNode, selfNode);
 
