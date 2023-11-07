@@ -304,138 +304,99 @@ operation Operation _redeployOnNearLessUsedNode() : Boolean{
  
 operation Operation dynamicFixing(component : Component) {
 	
-	var interaction = self.getAllInteractions()->first(); //TODO controllare potrebbe lavorare su un interaction non corretto	
-	var sourceLifeline = component.getLifeline(interaction);
+	for(interaction in self.getAllInteractions()){	
 	
-	//dynamic view fixing
-	if(sourceLifeline.isUndefined()){
-		if(debug()){
-			("sourceComponent --> "+component.getName()).println();
-		}	
-			("the operation ["+ self.getName() + "] has not a lifeline").println();
-			showError("Method: moveToNewComponentDeployedOnNearLessUsedNode() in operation.eol");
-	}else{
-		if(debug()){
-			("@@@@@@@@@@@@@ DEBUG dynamic Fixing @@@@@@@@@@@@").println();
-		}
-		var lifeline;	
-		if(self.getOwner().getLifeline(interaction) != null) {
-			lifeline =  self.getOwner().getLifeline(interaction);
-		} else {
-		 	lifeline = interaction.createLifeline(self.getOwner().getName()+"Lifeline"); //L2
-			var spProp = interaction.createOwnedAttribute(self.getOwner().getName(), self.getOwner());
-			lifeline.setRepresents(spProp);
-			lifeline.cloneAppliedStereotypesFrom(sourceLifeline);
-			lifeline.setVisibility(sourceLifeline.getVisibility());
-		}
+		// lifeline represeting the @param component, namely the lifeline from which the message should be removed
+		var componentLifeline = component.getLifeline(interaction);
 		
-		var beses = sourceLifeline.getBESes();
+		//dynamic view fixing
+		if(componentLifeline.isUndefined()){
+				("the operation ["+ self.getName() + "] has not a lifeline").println();
+				showError("Method: moveToNewComponentDeployedOnNearLessUsedNode() in operation.eol");
+				throw "The source component of the operation: " + self.getName() + "is not represented by any lifeline within the interaction: " + interaction.getName();
+		}else{
 		
-		if(debug()){
-			("beses --> "+beses ).println();
-		}
-		
-		var bes = beses->selectOne(bes | bes.getStart().getMessage().getSignature() == self );
-		if(debug()){
-			("bes --> "+bes ).println();
-			("indexOf bes of self --> "+ bes.getIndexOf()).println();
-			("self operation --> "+self.getName()).println();
-		}
-		
-		var sourceCoveredBys :Sequence(InteractionFragment) = new Sequence(InteractionFragment);
-		//sposto dal MOS_receive dell'op fino all'EOS esclusi
-		
-		for(i in sourceLifeline.getCoveredBys()){
-			if(debug()){
-				"************************".println();
-				/*("i.getOwner() --> "+i.getOwner()).println();
-				("bes.getOwner() --> "+bes.getOwner()).println();
-				("bes.getStart() --> "+bes.getStart()).println();*/
+			var receipientLifeline;	
+			
+			// It avoids creating a new lifeline if the owner is already representing by a lifeline within the interaction
+			if(self.getOwner().getLifeline(interaction).isDefined()) {
+				receipientLifeline =  self.getOwner().getLifeline(interaction);
+			} else {
+				/* 
+			 * create a new lifeline 
+			 * if the component, where the operation has been moved, 
+			 * does not have a lifeline in the selected interaction
+			 *
+			 */ 
+			 	receipientLifeline = interaction.createLifeline(self.getOwner().getName()+"_lifeline"); //L2
+				var spProp = interaction.createOwnedAttribute(self.getOwner().getName(), self.getOwner());
+				receipientLifeline.setRepresents(spProp);
+				receipientLifeline.cloneAppliedStereotypesFrom(componentLifeline);
+				receipientLifeline.setVisibility(componentLifeline.getVisibility());
 			}
 			
-			//var indexOf_i = i.getOwner().getIndexOf(i,0);
-			var indexOf_i = i.getIndexOf();
+			// List of BESes belong to the lifeline repesenting @param component
+			var beses = componentLifeline.getBESes();
+	
+			// BES of the operation subject of this method, namely self
+			var bes = beses->selectOne(bes | bes.getStart().getMessage().getSignature() == self );
 			
-			/*if(bes.isDefined() and  indexOf_i > bes.getOwner().getIndexOf(bes.getStart(),0) 
-				and indexOf_i < bes.getOwner().getIndexOf(bes.getFinish(),0)
-			)*/
-			if(bes.isDefined() and  indexOf_i > bes.getStart().getIndexOf() 
-				and indexOf_i < bes.getFinish().getIndexOf()){
-				if(debug()){
-					("i --> "+ i ).println();
+			var componentCoveredBys :Sequence(InteractionFragment) = new Sequence(InteractionFragment);
+	
+			//sposto dal MOS_receive dell'op fino all'EOS esclusi
+			
+			for(coveredBy in componentLifeline.getCoveredBys()){
+	
+				//var indexOf_i = i.getOwner().getIndexOf(i,0);
+				var indexOf_coveredBy = coveredBy.getIndexOf();
+				
+				// find the location where add the bes
+				if(bes.isDefined() and  indexOf_coveredBy > bes.getStart().getIndexOf() 
+					and indexOf_coveredBy < bes.getFinish().getIndexOf()){
+					receipientLifeline.getCoveredBys().add(coveredBy);
+					componentCoveredBys.add(coveredBy);
 				}
-				lifeline.getCoveredBys().add(i);
-				sourceCoveredBys.add(i);
 			}
-			if(debug()){
-				("indexOf_i --> "+indexOf_i).println();
-				"************************".println(); 
-				"".println();
+					
+			// Remove coveredBy from the source lifeline representing the @param component		
+			for(coveredBy in componentCoveredBys){
+				componentLifeline.removeInteractionFragment(coveredBy);
+			}
+			
+			if(bes.isDefined()){
+				//sposto il MOS_r dell'op e il EOS
+				receipientLifeline.getCoveredBys().add(bes.getStart());
+				receipientLifeline.getCoveredBys().add(bes.getFinish());
+				receipientLifeline.getCoveredBys().add(bes);
+			
+				componentLifeline.removeInteractionFragment(bes.getStart());
+				componentLifeline.removeInteractionFragment(bes.getFinish());
+				componentLifeline.removeInteractionFragment(bes);
 			}
 		}
-		
-		if(debug()){
-			"".println();
-			("sourceLifeline --> "+sourceLifeline.getName()).println();
-			("sourceCoveredBys --> "+sourceCoveredBys.size()).println();
-			"".println();
-		}
-		
-		for(i in sourceCoveredBys){
-			if(debug()){
-				"removing element i".println();
-				("i of sourceCoveredBys --> "+i).println();
-				if(i.isTypeOf(MessageOccurrenceSpecification))
-					i.getMessage().println();
-			}
-			sourceLifeline.removeInteractionFragment(i);
-		}
-		
-		if(bes.isDefined()){
-			//sposto il MOS_r dell'op e il EOS
-			lifeline.getCoveredBys().add(bes.getStart());
-			lifeline.getCoveredBys().add(bes.getFinish());
-			lifeline.getCoveredBys().add(bes);
-		
-			sourceLifeline.removeInteractionFragment(bes.getStart());
-			sourceLifeline.removeInteractionFragment(bes.getFinish());
-			sourceLifeline.removeInteractionFragment(bes);
-		}
-	}
-	
-	
-	
-	
-	if(debug()){
-		for(i in  sourceLifeline.getCoveredBys){
-			if(i.isTypeOf(MessageOccurrenceSpecification))
-				i.getMessage().println();
-		}
-		("@@@@@@@@@@@@@ DEBUG dynamic Fixing @@@@@@@@@@@@").println();
 	}
 }
 
 operation Operation deploymentFixing(){
 	//Deployment view Fixing
 	var componentWithOp = self.getNamespace();
+	
 	var nodeWithOp = componentWithOp.getNodes().first();
+	
 	var nodesNoOp : Sequence; 
 	var packageInUse = nodeWithOp.getNamespace();	
-	for(i in  self.getAllOwnMessages() ){
-		var componentNoOp = i.getSendEvent().getCovered().getRepresents().getType();
+	
+	for(ownedMessage in  self.getAllOwnMessages() ){
+		
+		var componentNoOp = ownedMessage.getSendEvent().getCovered().getRepresents().getType();
+
 		if((componentNoOp <> componentWithOp) and (componentNoOp.getNodes().notEmpty())  ){
 			nodesNoOp.add(componentNoOp.getNodes().first());
 		}
 	}
+	
 	if(	nodesNoOp.size > 0) {
 		nodeWithOp.addLinksAfterMove(nodesNoOp, packageInUse );
-	}
-	if(debug()){		
-		nodesNoOp.println();
-		nodeWithOp.println();
-		nodesNoOp.size().println();
-		"".println(nodesNoOp.size() > 0);
-		("@@@@@@@@@@@@@ DEBUG Deployment Fixing @@@@@@@@@@@@").println();
 	}
 }
 

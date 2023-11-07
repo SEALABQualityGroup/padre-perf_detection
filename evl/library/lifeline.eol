@@ -143,6 +143,7 @@ operation Lifeline lifelineRepresentsActor(op: Operation) : Component{
 		var lifelineInUse : Lifeline =  msgInUse.getSendEvent().getCovered();
 		if( lifelineInUse <> self ){
 			if (lifelineInUse.getRepresents().getType().isKindOf(Component)){
+				lf.getRepresents().println("Representing element of the lifeline that use the operation " + op.getName() + " -> ");
 				return lf.getRepresents().getType();
 			}
 		}

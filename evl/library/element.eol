@@ -13,23 +13,31 @@ operation UML!Element cloneAppliedStereotypesFrom(element : UML!Element) {
 			if(not self.hasStereotype(stereotype.getName())){
 				self.applyStereotype(stereotype);
 				
-				if(stereotype.name = "DaComponent"){
-					
+				if(stereotype.name = "DaComponent"){					
 					var daFailureTag = element.getTag("DaComponent", "failure")->first();
 					var daFailureType = daFailureTag.type;
 					//it invokes the EcoreUtil, shall it work within a standalone java invocation?
 					var emfTool : new Native("org.eclipse.epsilon.emc.emf.tools.EmfTool");
 					//creates a new instance of @param
 					var daFailure = emfTool.getECoreUtil().create(daFailureType);
-					//it is dummy value. it must be set wrt to the component/operation
-					daFailure.occurrenceProb.add("0.56");
+					//it uses the failure probability of @param elem
+					var failureProb = element.getValue(stereotype, "failure")->first().occurrenceProb->first();
+					daFailure.occurrenceProb.add(failureProb);
 					var failureTag = self.getTag("DaComponent", "failure");
 					failureTag.add(daFailure);
-				}
-			
+				}else if(stereotype.name = "HwComponent"){					
+					var priceValue = element.getValue(stereotype, "price");
+					self.setValue(stereotype, "price", priceValue);										
+				} 
+//				else if(stereotype.name = "GaExecHost"){					
+//					var speedFactor = element.getValue(stereotype, "speedFactor");
+//					self.setValue(stereotype, "speedFactor", speedFactor);										
+//				} 				
 			}
 				
-			if(stereotype.name <> "RtUnit" and stereotype.name <> "GaExecHost" and stereotype.name <> "DaComponent"){
+			// it avoids copying utilization value from the @param element
+			// RtUnit thows an error when copying its elements	
+			if(stereotype.name <> "RtUnit" and stereotype.name <> "GaExecHost" and stereotype.name <> "DaComponent" and stereotype.name <> "HwComponent"){
 				self.setAttributeValueFrom(stereotype, element);
 			}
 		}
@@ -40,10 +48,10 @@ operation UML!Element cloneAppliedStereotypesFrom(element : UML!Element) {
 operation UML!Element setAttributeValueFrom(stereotype : UML!Stereotype, element : UML!Element){
 	var stereotypeAttr = stereotype.getAttributes();
 	
-	
 	for(attr in stereotypeAttr){
 		if(attr.name <> "base_Element" and attr.name <> "base_NamedElement")
 		{ 
+					
 			var attrValue; //= element.getValue(stereotype, attr.name);
 			
 			if(element.getValue(stereotype, attr.name).isTypeOf(Set))
@@ -51,17 +59,14 @@ operation UML!Element setAttributeValueFrom(stereotype : UML!Stereotype, element
 			else
 				attrValue = element.getValue(stereotype, attr.name);
 			
-			//attrValue.println("attrValue --> ");
-			//attr.name.println("attr name --> ");
+//			attr.name.println("attr name -> ");
+//			attrValue.println("attrValue -> ");
 			
-			if(attrValue.isDefined()){
+			if(attrValue.isDefined() and attr.isDefined()){
 				self.setValue(stereotype, attr.name, attrValue);
 			}
 		}
 	}
-	
-	//self.getTag("DaComponent", "failure").println("self get tag --> ");
-	//element.getTag("DaComponent", "failure").println("element get tag --> ");
 }
 
 //clone gli attributi interni dello stereotipo
@@ -114,7 +119,7 @@ operation UML!Element reductionServDemand(percentage : Real){
 
 operation UML!Element getTag(stereotype : String, tag : String) : Any{
 	if(not self.hasStereotype(stereotype)){
-		"Stereotype not applied".println(stereotype);
+		" Stereotype not applied".println(stereotype);
 		return null;
 	}
 	return self.getValue(self.getStereotype(stereotype), tag);

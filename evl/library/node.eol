@@ -1067,8 +1067,10 @@ operation UML!Node reuseDeployedArtifactFrom(node : UML!Node){
 }
 
 operation Node destroyRelatedToNode(){
+
 	// Clean Deployment diagram
 	for (a: Artifact in self.getArtifact() ){
+		a.getName().println("Artifact of " + self.getName() + " to be removed -> ");
 		a.destroy();
 	}
 	
